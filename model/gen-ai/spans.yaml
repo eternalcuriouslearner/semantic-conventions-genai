@@ -59,25 +59,6 @@ attribute_groups:
       - ref: gen_ai.tool.definitions
         requirement_level: opt_in
 
-  - id: attributes.openai.output_type
-    visibility: internal
-    attributes:
-      - ref: gen_ai.output.type
-        note: |  # TODO https://github.com/open-telemetry/weaver/pull/1407
-          This attribute SHOULD be set to the output type requested by the client:
-
-          - `json` for structured outputs with defined or undefined schema
-          - `image` for image output
-          - `speech` for speech output
-          - `text` for plain text output
-
-          The attribute specifies the output modality and not the actual output format.
-          For example, if an image is requested, the actual output could be a
-          URL pointing to an image file.
-
-          Additional output format details may be recorded in the future in the
-          `gen_ai.output.{type}.*` attributes.
-
   - id: attributes.gen_ai.invoke_agent.common
     visibility: internal
     attributes:
@@ -509,7 +490,22 @@ span_refinements:
       **Span name** SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}`.
     stability: development
     attributes:
-      - ref_group: attributes.openai.output_type
+      # TODO https://github.com/open-telemetry/weaver/pull/1407: use a shared ref_group again once note overrides are preserved.
+      - ref: gen_ai.output.type
+        note: |
+          This attribute SHOULD be set to the output type requested by the client:
+
+          - `json` for structured outputs with defined or undefined schema
+          - `image` for image output
+          - `speech` for speech output
+          - `text` for plain text output
+
+          The attribute specifies the output modality and not the actual output format.
+          For example, if an image is requested, the actual output could be a
+          URL pointing to an image file.
+
+          Additional output format details may be recorded in the future in the
+          `gen_ai.output.{type}.*` attributes.
       - ref: gen_ai.request.model
         requirement_level: required
       - ref: gen_ai.usage.input_tokens
@@ -541,7 +537,22 @@ span_refinements:
       `gen_ai.provider.name` MUST be set to `"azure.ai.inference"` and SHOULD be provided **at span creation time**.
     stability: development
     attributes:
-      - ref_group: attributes.openai.output_type
+      # TODO https://github.com/open-telemetry/weaver/pull/1407: use a shared ref_group again once note overrides are preserved.
+      - ref: gen_ai.output.type
+        note: |
+          This attribute SHOULD be set to the output type requested by the client:
+
+          - `json` for structured outputs with defined or undefined schema
+          - `image` for image output
+          - `speech` for speech output
+          - `text` for plain text output
+
+          The attribute specifies the output modality and not the actual output format.
+          For example, if an image is requested, the actual output could be a
+          URL pointing to an image file.
+
+          Additional output format details may be recorded in the future in the
+          `gen_ai.output.{type}.*` attributes.
       - ref: azure.resource_provider.namespace
         note: >
           When `azure.resource_provider.namespace` attribute is populated, it MUST

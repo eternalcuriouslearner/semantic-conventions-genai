@@ -116,9 +116,19 @@ libraries.
 
 **[4] `gen_ai.output.type`:** when applicable and if the request includes an output format.
 
-**[5] `gen_ai.output.type`:** This attribute SHOULD be used when the client requests output of a specific type. The model may return zero or more outputs of this type.
-This attribute specifies the output modality and not the actual output format. For example, if an image is requested, the actual output could be a URL pointing to an image file.
-Additional output format details may be recorded in the future in the `gen_ai.output.{type}.*` attributes.
+**[5] `gen_ai.output.type`:** This attribute SHOULD be set to the output type requested by the client:
+
+- `json` for structured outputs with defined or undefined schema
+- `image` for image output
+- `speech` for speech output
+- `text` for plain text output
+
+The attribute specifies the output modality and not the actual output format.
+For example, if an image is requested, the actual output could be a
+URL pointing to an image file.
+
+Additional output format details may be recorded in the future in the
+`gen_ai.output.{type}.*` attributes.
 
 **[6] `gen_ai.request.model`:** The name of the GenAI model a request is being made to. If the model is supplied by a vendor, then the value must be the exact name of the model requested. If the model is a fine-tuned custom model, the value should have a more specific name than the base model that's been fine-tuned.
 
