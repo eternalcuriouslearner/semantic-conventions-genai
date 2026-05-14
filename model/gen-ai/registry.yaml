@@ -245,6 +245,16 @@ attributes:
     brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
     examples: ["conv_5j66UpCpwteGg4YSxUnt7lPY"]
     stability: development
+  - key: gen_ai.conversation.compacted
+    type: boolean
+    brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    note: |
+      Compaction may include summarization, pruning, sliding-window selection, hierarchical memory, or
+      provider/framework-managed context reduction.
+
+      If unset, the compaction state is unknown.
+    examples: [true]
+    stability: development
   - key: gen_ai.agent.id
     type: string
     brief: The unique identifier of the GenAI agent.

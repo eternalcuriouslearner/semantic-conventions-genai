@@ -105,6 +105,14 @@ attribute_groups:
           Application developers that manage conversation history MAY add conversation id to GenAI and other
           spans or logs using custom span or log record processors or hooks provided by instrumentation
           libraries.
+      - ref: gen_ai.conversation.compacted
+        requirement_level:
+          recommended: when known
+        note: |
+          Set to `true` when the agent framework compacts conversation history
+          before delegating to a model call (e.g., summarizing prior turns,
+          applying a sliding window across steps). The `invoke_agent` span is
+          the authoritative layer for orchestrator-driven compaction.
       - ref: gen_ai.agent.id
         requirement_level:
           conditionally_required: if applicable.
@@ -214,6 +222,14 @@ spans:
           Application developers that manage conversation history MAY add conversation id to GenAI and other
           spans or logs using custom span or log record processors or hooks provided by instrumentation
           libraries.
+      - ref: gen_ai.conversation.compacted
+        requirement_level:
+          recommended: when known
+        note: |
+          Set to `true` when the provider or client SDK compacts conversation
+          history server-side or in the client before invoking the model
+          (e.g., managed memory APIs, server-side conversation state,
+          context-window auto-truncation).
       - ref: gen_ai.provider.name
         # TODO: Not adding to common attributes because of https://github.com/open-telemetry/weaver/issues/479
         requirement_level: required
