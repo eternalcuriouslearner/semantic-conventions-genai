@@ -41,6 +41,7 @@ def run_chat():
     if port is not None:
         span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span("chat claude-sonnet-4-20250514", attributes=span_attributes) as span:
+        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute(
             "gen_ai.input.messages",
@@ -80,6 +81,7 @@ def run_chat():
         # Emit inference operation details event
         event_attrs = {
             "gen_ai.operation.name": "chat",
+            "gen_ai.conversation.compacted": True,
             "gen_ai.request.model": request_model,
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,

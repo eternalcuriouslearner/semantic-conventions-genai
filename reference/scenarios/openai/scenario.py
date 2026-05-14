@@ -51,6 +51,7 @@ def run_chat_reference(client):
     if port is not None:
         span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
+        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute("gen_ai.request.choice.count", request_choice_count)
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute("gen_ai.request.temperature", request_temperature)
@@ -100,6 +101,7 @@ def run_chat_reference(client):
         # Emit inference operation details event
         event_attrs = {
             "gen_ai.operation.name": "chat",
+            "gen_ai.conversation.compacted": True,
             "gen_ai.request.model": request_model,
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
@@ -146,6 +148,7 @@ def run_chat_streaming_reference(client):
     if port is not None:
         span_attributes_2["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes_2) as span:
+        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute(
             "gen_ai.input.messages",
             json.dumps(
@@ -229,6 +232,7 @@ def run_chat_tool_call_reference(client):
     if port is not None:
         span_attributes_3["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes_3) as span:
+        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute("gen_ai.tool.definitions", json.dumps(tools))
         resp = client.chat.completions.create(
             model=request_model,

@@ -102,6 +102,7 @@ def run_plan_and_execute_reference():
             chat_span.set_attribute("gen_ai.operation.name", "chat")
             chat_span.set_attribute("gen_ai.provider.name", "openai")
             chat_span.set_attribute("gen_ai.request.model", request_model)
+            chat_span.set_attribute("gen_ai.conversation.compacted", True)
             if host:
                 chat_span.set_attribute("server.address", host)
             if port is not None:

@@ -69,6 +69,7 @@ async def run_agent():
     with _reference_tracer.start_as_current_span(
         "invoke_agent test-agent", attributes=agent_span_attributes
     ) as agent_span:
+        agent_span.set_attribute("gen_ai.conversation.compacted", True)
         agent_span.set_attribute(
             "gen_ai.system_instructions", json.dumps([{"parts": [{"type": "text", "content": agent.instructions}]}])
         )
@@ -98,6 +99,7 @@ async def run_agent():
         if port is not None:
             span_attributes["server.port"] = port
         with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
+            span.set_attribute("gen_ai.conversation.compacted", True)
             span.set_attribute(
                 "gen_ai.tool.definitions",
                 json.dumps(

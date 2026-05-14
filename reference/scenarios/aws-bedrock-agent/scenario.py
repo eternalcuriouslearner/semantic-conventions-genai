@@ -42,6 +42,7 @@ def run_invoke_agent(client):
     with tracer.start_as_current_span("invoke_agent", kind=SpanKind.CLIENT, attributes=span_attributes) as span:
         span.set_attribute("gen_ai.agent.id", AGENT_ID)
         span.set_attribute("gen_ai.conversation.id", SESSION_ID)
+        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute(
             "gen_ai.input.messages", json.dumps([{"role": "user", "parts": [{"type": "text", "content": USER_INPUT}]}])
         )
