@@ -27,7 +27,12 @@ def run_chat():
     print("  [chat] basic chat completion (reference implementation)")
     request_model = "claude-sonnet-4-20250514"
     request_max_tokens = 100
-    messages = [{"role": "user", "content": "Say hello."}]
+    previous_messages = [
+        "User asked for a friendly greeting.",
+        "Assistant should keep the answer short.",
+    ]
+    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+    messages = [{"role": "user", "content": f"{compacted_summary}\n\nCurrent request: Say hello."}]
     client = anthropic.Anthropic(base_url=MOCK_BASE_URL, api_key="mock-key")
 
     host, port = mock_server_host_port(MOCK_BASE_URL)

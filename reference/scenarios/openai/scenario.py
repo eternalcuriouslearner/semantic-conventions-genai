@@ -28,9 +28,14 @@ def run_chat_reference(client):
     request_frequency_penalty = 0.1
     request_presence_penalty = 0.2
     request_top_p = 0.9
+    previous_messages = [
+        "User asked for a friendly greeting.",
+        "Assistant should keep the answer short.",
+    ]
+    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Say hello."},
+        {"role": "user", "content": f"{compacted_summary}\n\nCurrent request: Say hello."},
     ]
     system_instructions = [
         {"parts": [{"type": "text", "content": message["content"]}]}
@@ -148,7 +153,6 @@ def run_chat_streaming_reference(client):
     if port is not None:
         span_attributes_2["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes_2) as span:
-        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute(
             "gen_ai.input.messages",
             json.dumps(
@@ -232,7 +236,6 @@ def run_chat_tool_call_reference(client):
     if port is not None:
         span_attributes_3["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes_3) as span:
-        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute("gen_ai.tool.definitions", json.dumps(tools))
         resp = client.chat.completions.create(
             model=request_model,

@@ -36,7 +36,12 @@ async def run_agent_query_reference():
         permission_mode="bypassPermissions",
     )
 
-    prompt_text = "Say hello."
+    previous_messages = [
+        "User asked for a friendly greeting.",
+        "Assistant should keep the answer short.",
+    ]
+    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+    prompt_text = f"{compacted_summary}\n\nCurrent request: Say hello."
     span_attributes = {
         "gen_ai.operation.name": "chat",
         "gen_ai.provider.name": "anthropic",

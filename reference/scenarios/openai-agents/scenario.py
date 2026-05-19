@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 
+from opentelemetry.trace import SpanKind
 from reference_shared import flush_and_shutdown, mock_server_host_port, reference_tracer, setup_otel
 
 MOCK_BASE_URL = os.environ["MOCK_LLM_URL"] + "/v1"
@@ -53,7 +54,12 @@ async def run_agent():
         model=model,
         tools=tools,
     )
-    input_text = "What's the weather in Seattle?"
+    previous_messages = [
+        "User is planning a trip to Seattle.",
+        "Assistant should answer using the weather tool when weather is requested.",
+    ]
+    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+    input_text = f"{compacted_summary}\n\nCurrent request: What's the weather in Seattle?"
 
     print("  [agent_run] agent with tool calling (reference implementation)")
     agent_span_attributes = {
@@ -62,12 +68,8 @@ async def run_agent():
         "gen_ai.request.model": request_model,
         "gen_ai.agent.name": agent.name,
     }
-    if host:
-        agent_span_attributes["server.address"] = host
-    if port is not None:
-        agent_span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span(
-        "invoke_agent test-agent", attributes=agent_span_attributes
+        "invoke_agent test-agent", kind=SpanKind.INTERNAL, attributes=agent_span_attributes
     ) as agent_span:
         agent_span.set_attribute("gen_ai.conversation.compacted", True)
         agent_span.set_attribute(

@@ -124,7 +124,14 @@ def run_plan_and_execute_reference():
 
             chat_model.root_client.chat.completions.create = _capture_create
             try:
-                plan = planner.plan(inputs={"input": "What is the capital of France?"})
+                previous_messages = [
+                    "User is asking geography questions.",
+                    "Assistant should answer concisely.",
+                ]
+                compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+                plan = planner.plan(
+                    inputs={"input": f"{compacted_summary}\n\nCurrent request: What is the capital of France?"}
+                )
             finally:
                 chat_model.root_client.chat.completions.create = original_create
 
