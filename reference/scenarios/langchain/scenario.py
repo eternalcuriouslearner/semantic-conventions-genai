@@ -89,6 +89,7 @@ def run_plan_and_execute_reference():
     planner = load_chat_planner(chat_model)
     captured_completion = None
     captured_messages = None
+    planner_input = "What is the capital of France?"
 
     # langchain-experimental's LLMPlanner has no library-owned agent identity
     # or name (no .id, no .name) -- the planner is a thin wrapper over an
@@ -102,7 +103,6 @@ def run_plan_and_execute_reference():
             chat_span.set_attribute("gen_ai.operation.name", "chat")
             chat_span.set_attribute("gen_ai.provider.name", "openai")
             chat_span.set_attribute("gen_ai.request.model", request_model)
-            chat_span.set_attribute("gen_ai.conversation.compacted", True)
             if host:
                 chat_span.set_attribute("server.address", host)
             if port is not None:
@@ -124,14 +124,7 @@ def run_plan_and_execute_reference():
 
             chat_model.root_client.chat.completions.create = _capture_create
             try:
-                previous_messages = [
-                    "User is asking geography questions.",
-                    "Assistant should answer concisely.",
-                ]
-                compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
-                plan = planner.plan(
-                    inputs={"input": f"{compacted_summary}\n\nCurrent request: What is the capital of France?"}
-                )
+                plan = planner.plan(inputs={"input": planner_input})
             finally:
                 chat_model.root_client.chat.completions.create = original_create
 

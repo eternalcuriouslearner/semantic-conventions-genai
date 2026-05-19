@@ -36,18 +36,12 @@ async def run_agent_query_reference():
         permission_mode="bypassPermissions",
     )
 
-    previous_messages = [
-        "User asked for a friendly greeting.",
-        "Assistant should keep the answer short.",
-    ]
-    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
-    prompt_text = f"{compacted_summary}\n\nCurrent request: Say hello."
+    prompt_text = "Say hello."
     span_attributes = {
         "gen_ai.operation.name": "chat",
         "gen_ai.provider.name": "anthropic",
     }
     with _reference_tracer.start_as_current_span("chat claude", attributes=span_attributes) as span:
-        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute(
             "gen_ai.input.messages", json.dumps([{"role": "user", "parts": [{"type": "text", "content": prompt_text}]}])
         )

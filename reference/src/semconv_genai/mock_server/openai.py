@@ -354,4 +354,16 @@ def responses():
     body = request.get_json(silent=True) or {}
     resp = dict(RESPONSES_RESPONSE)
     resp["model"] = body.get("model", resp["model"])
+    resp["output"] = copy.deepcopy(resp["output"])
+    context_management = body.get("context_management") or []
+    if any(item.get("type") == "compaction" for item in context_management if isinstance(item, dict)):
+        resp["output"].insert(
+            0,
+            {
+                "type": "compaction",
+                "id": "cmp-mock-001",
+                "encrypted_content": "opaque encrypted compaction state",
+                "created_by": "server",
+            },
+        )
     return resp

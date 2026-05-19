@@ -2,7 +2,6 @@
   "spans": {
     "invoke_agent_internal": [
       "gen_ai.agent.name",
-      "gen_ai.conversation.compacted",
       "gen_ai.input.messages",
       "gen_ai.operation.name",
       "gen_ai.output.messages",
@@ -15,7 +14,6 @@
       "gen_ai.usage.output_tokens"
     ],
     "inference": [
-      "gen_ai.conversation.compacted",
       "gen_ai.operation.name",
       "gen_ai.provider.name",
       "gen_ai.request.model",

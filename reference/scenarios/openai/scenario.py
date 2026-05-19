@@ -16,6 +16,23 @@ MOCK_BASE_URL = os.environ["MOCK_LLM_URL"] + "/v1"
 _reference_tracer = reference_tracer()
 
 
+def compact_conversation_history(previous_messages, current_request):
+    """Return the compacted user message and whether compaction was performed."""
+    if not previous_messages:
+        return current_request, False
+    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+    return f"{compacted_summary}\n\nCurrent request: {current_request}", True
+
+
+def response_has_compaction_item(response):
+    """Return whether the Responses API output includes a ResponseCompactionItem."""
+    for item in getattr(response, "output", []) or []:
+        item_type = item.get("type") if isinstance(item, dict) else getattr(item, "type", None)
+        if item_type == "compaction":
+            return True
+    return False
+
+
 def run_chat_reference(client):
     """Scenario: basic chat completion with reference implementation."""
     print("  [chat] basic chat completion (reference implementation)")
@@ -32,10 +49,10 @@ def run_chat_reference(client):
         "User asked for a friendly greeting.",
         "Assistant should keep the answer short.",
     ]
-    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
+    compacted_user_content, conversation_compacted = compact_conversation_history(previous_messages, "Say hello.")
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": f"{compacted_summary}\n\nCurrent request: Say hello."},
+        {"role": "user", "content": compacted_user_content},
     ]
     system_instructions = [
         {"parts": [{"type": "text", "content": message["content"]}]}
@@ -56,7 +73,7 @@ def run_chat_reference(client):
     if port is not None:
         span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
-        span.set_attribute("gen_ai.conversation.compacted", True)
+        span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.request.choice.count", request_choice_count)
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute("gen_ai.request.temperature", request_temperature)
@@ -106,7 +123,7 @@ def run_chat_reference(client):
         # Emit inference operation details event
         event_attrs = {
             "gen_ai.operation.name": "chat",
-            "gen_ai.conversation.compacted": True,
+            "gen_ai.conversation.compacted": conversation_compacted,
             "gen_ai.request.model": request_model,
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
@@ -135,6 +152,53 @@ def run_chat_reference(client):
         )
 
         print(f"    -> {resp.choices[0].message.content[:60]}")
+
+
+def run_responses_compaction_reference(client):
+    """Scenario: Responses API server-side compaction signal from output items."""
+    print("  [responses_compaction] responses with server-side compaction (reference implementation)")
+    request_model = "gpt-4o-mini"
+    conversation = [
+        {
+            "type": "message",
+            "role": "user",
+            "content": "Let's continue a long implementation task.",
+        }
+    ]
+    host, port = mock_server_host_port(MOCK_BASE_URL)
+    span_attributes = {
+        "gen_ai.operation.name": "responses",
+        "gen_ai.provider.name": "openai",
+        "gen_ai.request.model": request_model,
+    }
+    if host:
+        span_attributes["server.address"] = host
+    if port is not None:
+        span_attributes["server.port"] = port
+
+    with _reference_tracer.start_as_current_span("responses gpt-4o-mini", attributes=span_attributes) as span:
+        span.set_attribute(
+            "gen_ai.input.messages",
+            json.dumps([{"role": "user", "parts": [{"type": "text", "content": conversation[0]["content"]}]}]),
+        )
+        response = client.responses.create(
+            model=request_model,
+            input=conversation,
+            store=False,
+            context_management=[{"type": "compaction", "compact_threshold": 200000}],
+        )
+
+        # Real provider-side instrumentation can derive this from a
+        # ResponseCompactionItem (`type: "compaction"`) in response.output,
+        # rather than guessing from input size or from the presence of the
+        # context_management request option.
+        span.set_attribute("gen_ai.conversation.compacted", response_has_compaction_item(response))
+        span.set_attribute("gen_ai.response.model", response.model)
+        span.set_attribute("gen_ai.response.id", response.id)
+        if response.usage:
+            span.set_attribute("gen_ai.usage.input_tokens", response.usage.input_tokens)
+            span.set_attribute("gen_ai.usage.output_tokens", response.usage.output_tokens)
+        print(f"    -> compacted: {response_has_compaction_item(response)}")
 
 
 def run_chat_streaming_reference(client):
@@ -397,6 +461,7 @@ def main():
     client = openai.OpenAI(base_url=MOCK_BASE_URL, api_key="mock-key")
 
     run_chat_reference(client)
+    run_responses_compaction_reference(client)
     run_chat_streaming_reference(client)
     run_chat_tool_call_reference(client)
     run_chat_with_document_input_reference(client)

@@ -23,12 +23,7 @@ tracer = trace.get_tracer("gen_ai.client.aws_bedrock")
 AGENT_ID = "MOCK_AGENT_ID"
 AGENT_ALIAS_ID = "MOCK_ALIAS_ID"
 SESSION_ID = "mock-session-001"
-PREVIOUS_MESSAGES = [
-    "User opened a support case.",
-    "Assistant should continue from the summarized support context.",
-]
-COMPACTED_SUMMARY = "Compacted prior conversation: " + " ".join(PREVIOUS_MESSAGES)
-USER_INPUT = f"{COMPACTED_SUMMARY}\n\nCurrent request: Hello, agent!"
+USER_INPUT = "Hello, agent!"
 
 
 def run_invoke_agent(client):
@@ -47,7 +42,6 @@ def run_invoke_agent(client):
     with tracer.start_as_current_span("invoke_agent", kind=SpanKind.CLIENT, attributes=span_attributes) as span:
         span.set_attribute("gen_ai.agent.id", AGENT_ID)
         span.set_attribute("gen_ai.conversation.id", SESSION_ID)
-        span.set_attribute("gen_ai.conversation.compacted", True)
         span.set_attribute(
             "gen_ai.input.messages", json.dumps([{"role": "user", "parts": [{"type": "text", "content": USER_INPUT}]}])
         )

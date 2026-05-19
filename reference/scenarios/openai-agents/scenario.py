@@ -54,12 +54,7 @@ async def run_agent():
         model=model,
         tools=tools,
     )
-    previous_messages = [
-        "User is planning a trip to Seattle.",
-        "Assistant should answer using the weather tool when weather is requested.",
-    ]
-    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
-    input_text = f"{compacted_summary}\n\nCurrent request: What's the weather in Seattle?"
+    input_text = "What's the weather in Seattle?"
 
     print("  [agent_run] agent with tool calling (reference implementation)")
     agent_span_attributes = {
@@ -71,7 +66,6 @@ async def run_agent():
     with _reference_tracer.start_as_current_span(
         "invoke_agent test-agent", kind=SpanKind.INTERNAL, attributes=agent_span_attributes
     ) as agent_span:
-        agent_span.set_attribute("gen_ai.conversation.compacted", True)
         agent_span.set_attribute(
             "gen_ai.system_instructions", json.dumps([{"parts": [{"type": "text", "content": agent.instructions}]}])
         )
@@ -101,7 +95,6 @@ async def run_agent():
         if port is not None:
             span_attributes["server.port"] = port
         with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
-            span.set_attribute("gen_ai.conversation.compacted", True)
             span.set_attribute(
                 "gen_ai.tool.definitions",
                 json.dumps(
