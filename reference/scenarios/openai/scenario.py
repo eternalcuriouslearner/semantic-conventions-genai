@@ -167,16 +167,17 @@ def run_responses_compaction_reference(client):
     ]
     host, port = mock_server_host_port(MOCK_BASE_URL)
     span_attributes = {
-        "gen_ai.operation.name": "responses",
+        "gen_ai.operation.name": "chat",
         "gen_ai.provider.name": "openai",
         "gen_ai.request.model": request_model,
+        "openai.api.type": "responses",
     }
     if host:
         span_attributes["server.address"] = host
     if port is not None:
         span_attributes["server.port"] = port
 
-    with _reference_tracer.start_as_current_span("responses gpt-4o-mini", attributes=span_attributes) as span:
+    with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
         span.set_attribute(
             "gen_ai.input.messages",
             json.dumps([{"role": "user", "parts": [{"type": "text", "content": conversation[0]["content"]}]}]),
