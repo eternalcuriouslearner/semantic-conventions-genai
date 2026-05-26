@@ -1,0 +1,10 @@
+{
+  "spans": {
+    "invoke_agent_client": [
+      "gen_ai.conversation.id",
+      "gen_ai.operation.name",
+      "server.address",
+      "server.port"
+    ]
+  }
+}

@@ -1,0 +1,115 @@
+file_format: definition/2
+metrics:
+  - name: a2a.client.operation.duration
+    instrument: histogram
+    unit: "s"
+    brief: >
+      Duration of an A2A request as observed by the client.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+      - ref_group: a2a.client.address_and_port.attributes
+
+  - name: a2a.server.operation.duration
+    instrument: histogram
+    unit: "s"
+    brief: >
+      Duration of an A2A request as observed by the server.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+
+  - name: a2a.client.response.time_to_first_event
+    instrument: histogram
+    unit: "s"
+    brief: >
+      Time to receive the first A2A streaming response event, measured from
+      when the client issues the A2A request.
+    note: >
+      This metric SHOULD be reported for streaming calls and SHOULD NOT be
+      reported otherwise.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+      - ref_group: a2a.client.address_and_port.attributes
+
+  - name: a2a.server.response.time_to_first_event
+    instrument: histogram
+    unit: "s"
+    brief: >
+      Time to send the first A2A streaming response event, measured from when
+      the server receives the A2A request.
+    note: >
+      This metric SHOULD be reported for streaming calls and SHOULD NOT be
+      reported otherwise.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+
+  - name: a2a.client.response.sse.event.count
+    instrument: histogram
+    unit: "{event}"
+    brief: >
+      Number of SSE events received in an A2A streaming response.
+    note: >
+      This metric SHOULD be reported for A2A SSE streaming responses and SHOULD
+      NOT be reported otherwise.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: int
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+      - ref_group: a2a.client.address_and_port.attributes
+
+  - name: a2a.server.response.sse.event.count
+    instrument: histogram
+    unit: "{event}"
+    brief: >
+      Number of SSE events sent in an A2A streaming response.
+    note: >
+      This metric SHOULD be reported for A2A SSE streaming responses and SHOULD
+      NOT be reported otherwise.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: int
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+
+  - name: a2a.client.response.body.size
+    instrument: histogram
+    unit: "By"
+    brief: >
+      Size of the A2A response body received by the client.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: int
+    attributes:
+      - ref_group: a2a.operation.metric.attributes
+      - ref_group: a2a.client.address_and_port.attributes
+
+  - name: a2a.server.response.body.size
+    instrument: histogram
+    unit: "By"
+    brief: >
+      Size of the A2A response body sent by the server.
+    stability: development
+    annotations:
+      code_generation:
+        metric_value_type: int
+    attributes:
+      - ref_group: a2a.operation.metric.attributes

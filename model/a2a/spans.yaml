@@ -1,0 +1,49 @@
+file_format: definition/2
+spans:
+  - type: a2a.client
+    kind: client
+    name:
+      note: |
+        **Span name** SHOULD be `{a2a.method.name}`.
+    brief: This span describes an A2A call from the client side.
+    note: |
+      This span is reported by the A2A client when it initiates an A2A
+      request. It covers the time to receive the response for non-streaming
+      calls and the time to consume the response stream for streaming calls.
+
+      **Span name** SHOULD be `{a2a.method.name}`.
+
+      A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
+      when the A2A method invokes an agent. In that case, instrumentation
+      SHOULD set `gen_ai.operation.name` to `invoke_agent`.
+
+      HTTP conventions describe the transport request. A2A conventions describe
+      the logical A2A request and task lifecycle.
+    stability: development
+    attributes:
+      - ref_group: a2a.common.attributes
+      - ref_group: a2a.client.address_and_port.attributes
+
+  - type: a2a.server
+    kind: server
+    name:
+      note: |
+        **Span name** SHOULD be `{a2a.method.name}`.
+    brief: This span describes processing of an A2A request by the server.
+    note: |
+      This span is reported by the A2A server when it processes an A2A
+      request. It covers the time to produce the response for non-streaming
+      calls and the time to produce the response stream for streaming calls.
+
+      **Span name** SHOULD be `{a2a.method.name}`.
+
+      A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
+      when the A2A method invokes an agent. In that case, instrumentation
+      SHOULD set `gen_ai.operation.name` to `invoke_agent`.
+
+      HTTP conventions describe the transport request. A2A conventions describe
+      the logical A2A request and task lifecycle.
+    stability: development
+    attributes:
+      - ref_group: a2a.common.attributes
+      - ref_group: a2a.server.address_and_port.attributes

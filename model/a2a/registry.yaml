@@ -1,0 +1,129 @@
+file_format: definition/2
+attributes:
+  - key: a2a.method.name
+    type:
+      members:
+        - id: message_send
+          value: message/send
+          brief: >
+            Request to send a message to an agent and receive a non-streaming
+            response.
+          stability: development
+        - id: message_stream
+          value: message/stream
+          brief: >
+            Request to send a message to an agent and receive a streaming
+            response.
+          stability: development
+        - id: tasks_get
+          value: tasks/get
+          brief: >
+            Request to get the current state of a task.
+          stability: development
+        - id: tasks_cancel
+          value: tasks/cancel
+          brief: >
+            Request to cancel a task.
+          stability: development
+        - id: tasks_resubscribe
+          value: tasks/resubscribe
+          brief: >
+            Request to resume a streaming subscription for task updates.
+          stability: development
+        - id: tasks_list
+          value: tasks/list
+          brief: >
+            Request to list tasks.
+          stability: development
+        - id: tasks_push_notification_config_set
+          value: tasks/pushNotificationConfig/set
+          brief: >
+            Request to create or update a task push notification configuration.
+          stability: development
+        - id: tasks_push_notification_config_get
+          value: tasks/pushNotificationConfig/get
+          brief: >
+            Request to get a task push notification configuration.
+          stability: development
+        - id: tasks_push_notification_config_list
+          value: tasks/pushNotificationConfig/list
+          brief: >
+            Request to list task push notification configurations.
+          stability: development
+        - id: tasks_push_notification_config_delete
+          value: tasks/pushNotificationConfig/delete
+          brief: >
+            Request to delete a task push notification configuration.
+          stability: development
+        - id: agent_get_authenticated_extended_card
+          value: agent/getAuthenticatedExtendedCard
+          brief: >
+            Request to get the authenticated extended agent card.
+          stability: development
+    brief: The name of the A2A request method.
+    stability: development
+  - key: a2a.protocol.version
+    type: string
+    brief: The version of the A2A protocol used.
+    examples: ["0.3.0"]
+    stability: development
+  - key: a2a.task.id
+    type: string
+    brief: The unique identifier of an A2A task.
+    examples: ["task-5f2a7c7d9f8e4d2a"]
+    stability: development
+  - key: a2a.task.state
+    type:
+      members:
+        - id: submitted
+          value: submitted
+          brief: >
+            The task has been submitted.
+          stability: development
+        - id: working
+          value: working
+          brief: >
+            The task is being processed.
+          stability: development
+        - id: input_required
+          value: input-required
+          brief: >
+            The task requires additional input.
+          stability: development
+        - id: completed
+          value: completed
+          brief: >
+            The task completed successfully.
+          stability: development
+        - id: canceled
+          value: canceled
+          brief: >
+            The task was canceled.
+          stability: development
+        - id: failed
+          value: failed
+          brief: >
+            The task failed.
+          stability: development
+        - id: rejected
+          value: rejected
+          brief: >
+            The task was rejected.
+          stability: development
+        - id: auth_required
+          value: auth-required
+          brief: >
+            The task requires authentication.
+          stability: development
+        - id: unknown
+          value: unknown
+          brief: >
+            The task state is unknown.
+          stability: development
+    brief: The state of an A2A task.
+    stability: development
+  - key: a2a.context.id
+    type: string
+    brief: The A2A context identifier used to correlate related messages and tasks.
+    examples: ["ctx-7b8f0f5f0d6a4f65"]
+    stability: development

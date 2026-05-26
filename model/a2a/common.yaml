@@ -1,0 +1,111 @@
+file_format: definition/2
+attribute_groups:
+  - id: a2a.common.attributes
+    visibility: internal
+    attributes:
+      - ref: a2a.method.name
+        requirement_level: required
+      - ref: error.type
+        requirement_level:
+          conditionally_required: If and only if the operation fails.
+        note: |
+          This attribute SHOULD be set to the string representation of the
+          JSON-RPC error code when a JSON-RPC error is returned.
+      - ref: a2a.protocol.version
+      - ref: a2a.task.id
+        requirement_level:
+          conditionally_required: When the A2A request or response is task-scoped.
+      - ref: a2a.task.state
+        requirement_level:
+          conditionally_required: When the A2A response or event contains task state.
+      - ref: a2a.context.id
+        requirement_level:
+          conditionally_required: When the A2A request or response contains context id.
+      - ref: gen_ai.conversation.id
+        requirement_level:
+          conditionally_required: When `a2a.context.id` is available and represents the conversation context.
+        note: >
+          When available, `gen_ai.conversation.id` SHOULD be set to the same
+          value as `a2a.context.id` to allow cross-GenAI correlation.
+      - ref: gen_ai.operation.name
+        brief: The name of the GenAI operation being performed.
+        examples: ["invoke_agent"]
+        requirement_level:
+          recommended: >
+            SHOULD be set to `invoke_agent` when the A2A method invokes an
+            agent, such as `message/send` or `message/stream`.
+      - ref: gen_ai.request.stream
+        requirement_level:
+          conditionally_required: If and only if the A2A request is streaming.
+      - ref_group: a2a.network.protocol.attributes
+
+  - id: a2a.network.protocol.attributes
+    visibility: internal
+    attributes:
+      - ref: network.transport
+        requirement_level:
+          recommended: When applicable.
+        examples: ["tcp", "quic"]
+      - ref: network.protocol.name
+        requirement_level:
+          recommended: When applicable.
+        examples: ["http", "grpc"]
+      - ref: network.protocol.version
+        requirement_level:
+          recommended: When applicable.
+      - ref: rpc.system.name
+        requirement_level:
+          recommended: When the A2A JSON-RPC binding is used.
+        examples: ["jsonrpc"]
+        note: >
+          This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC
+          binding is used and SHOULD NOT be set for non-RPC bindings.
+      - ref: jsonrpc.protocol.version
+        requirement_level:
+          recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
+      - ref: jsonrpc.request.id
+        requirement_level:
+          conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
+      - ref: rpc.response.status_code
+        brief: The error code from the JSON-RPC response.
+        requirement_level:
+          conditionally_required: If the A2A JSON-RPC response contains an error code.
+
+  - id: a2a.client.address_and_port.attributes
+    visibility: internal
+    attributes:
+      - ref: server.address
+        requirement_level:
+          recommended: If applicable.
+      - ref: server.port
+        requirement_level:
+          recommended: When `server.address` is set.
+
+  - id: a2a.server.address_and_port.attributes
+    visibility: internal
+    attributes:
+      - ref: client.address
+        requirement_level:
+          recommended: If applicable.
+      - ref: client.port
+        requirement_level:
+          recommended: When `client.address` is set.
+
+  - id: a2a.operation.metric.attributes
+    visibility: internal
+    attributes:
+      - ref: a2a.method.name
+        requirement_level: required
+      - ref: error.type
+        requirement_level:
+          conditionally_required: If and only if the operation fails.
+      - ref: a2a.protocol.version
+      - ref: a2a.task.state
+        requirement_level:
+          recommended: When the A2A response or event contains task state.
+      - ref: gen_ai.operation.name
+        requirement_level:
+          recommended: >
+            SHOULD be set to `invoke_agent` when the A2A method invokes an
+            agent, such as `message/send` or `message/stream`.
+      - ref_group: a2a.network.protocol.attributes
