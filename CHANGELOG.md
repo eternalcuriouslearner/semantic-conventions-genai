@@ -8,6 +8,9 @@
 
 ### 🚀 New components 🚀
 
+- Add A2A protocol semantic conventions for client/server spans, protocol attributes, task/context
+  attributes, and A2A client/server operation and streaming response metrics.
+
 ### 💡 Enhancements 💡
 
 - Add GenAI memory operation span and attributes for memory store lifecycle (create/delete),
