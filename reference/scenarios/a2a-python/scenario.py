@@ -1,6 +1,7 @@
 """Reference implementation for A2A Python SDK."""
 
 import time
+from functools import cache
 
 from a2a import types as a2a_types
 from opentelemetry import metrics
@@ -30,6 +31,17 @@ TASK_STATE_AUTH_REQUIRED = a2a_types.TaskState.Value("TASK_STATE_AUTH_REQUIRED")
 
 def _meter():
     return metrics.get_meter("gen_ai.reference")
+
+
+@cache
+def _metric_instruments():
+    meter = _meter()
+    return {
+        "operation_duration": meter.create_histogram("a2a.client.operation.duration", unit="s"),
+        "response_body_size": meter.create_histogram("a2a.client.response.body.size", unit="By"),
+        "time_to_first_event": meter.create_histogram("a2a.client.response.time_to_first_event", unit="s"),
+        "sse_event_count": meter.create_histogram("a2a.client.response.sse.event.count", unit="{event}"),
+    }
 
 
 def _message(text: str, *, message_id: str, role: int, task_id: str = ""):
@@ -90,11 +102,17 @@ def _a2a_span_attrs(method: str, *, request_id: str, task=None, context_id: str 
     return attrs
 
 
-def _record_operation_metrics(method: str, duration: float, body_size: int, *, task_state: str | None = None) -> None:
+def _record_operation_metrics(
+    method: str,
+    duration: float,
+    body_size: int,
+    *,
+    task_state: str | None = None,
+    gen_ai_operation_name: str | None = None,
+) -> None:
     attrs = {
         "a2a.method.name": method,
         "a2a.protocol.version": PROTOCOL_VERSION,
-        "gen_ai.operation.name": "invoke_agent",
         "network.protocol.name": "http",
         "network.transport": "tcp",
         "rpc.system.name": "jsonrpc",
@@ -106,10 +124,12 @@ def _record_operation_metrics(method: str, duration: float, body_size: int, *, t
         attrs["server.port"] = port
     if task_state:
         attrs["a2a.task.state"] = task_state
+    if gen_ai_operation_name:
+        attrs["gen_ai.operation.name"] = gen_ai_operation_name
 
-    meter = _meter()
-    meter.create_histogram("a2a.client.operation.duration", unit="s").record(duration, attrs)
-    meter.create_histogram("a2a.client.response.body.size", unit="By").record(body_size, attrs)
+    instruments = _metric_instruments()
+    instruments["operation_duration"].record(duration, attrs)
+    instruments["response_body_size"].record(body_size, attrs)
 
 
 def run_message_send_reference() -> None:
@@ -144,13 +164,13 @@ def run_message_send_reference() -> None:
     attrs["gen_ai.operation.name"] = "invoke_agent"
     with _reference_tracer.start_as_current_span(method, attributes=attrs) as span:
         span.set_attribute("gen_ai.request.stream", False)
-        span.set_attribute("jsonrpc.protocol.version", "2.0")
     duration = time.perf_counter() - start
     _record_operation_metrics(
         method,
         duration,
         response.ByteSize(),
         task_state=_task_state_value(task.status.state),
+        gen_ai_operation_name="invoke_agent",
     )
     print(f"    -> {task.id} {_task_state_value(task.status.state)}")
 
@@ -160,13 +180,6 @@ def run_message_stream_reference() -> None:
     print("  [message_stream] A2A JSON-RPC message/stream")
     method = "message/stream"
     request_id = "req-message-stream-1"
-    _request = a2a_types.SendMessageRequest(
-        message=_message(
-            "Track this task.",
-            message_id="msg-user-2",
-            role=ROLE_USER,
-        ),
-    )
     events = [
         a2a_types.StreamResponse(
             status_update=a2a_types.TaskStatusUpdateEvent(
@@ -195,7 +208,6 @@ def run_message_stream_reference() -> None:
     attrs["gen_ai.operation.name"] = "invoke_agent"
     with _reference_tracer.start_as_current_span(method, attributes=attrs) as span:
         span.set_attribute("gen_ai.request.stream", True)
-        span.set_attribute("jsonrpc.protocol.version", "2.0")
         response_size = 0
         for event in events:
             if first_event_at is None:
@@ -219,11 +231,11 @@ def run_message_stream_reference() -> None:
     if port is not None:
         metric_attrs["server.port"] = port
 
-    meter = _meter()
-    meter.create_histogram("a2a.client.operation.duration", unit="s").record(duration, metric_attrs)
-    meter.create_histogram("a2a.client.response.time_to_first_event", unit="s").record(ttfb, metric_attrs)
-    meter.create_histogram("a2a.client.response.sse.event.count", unit="{event}").record(len(events), metric_attrs)
-    meter.create_histogram("a2a.client.response.body.size", unit="By").record(response_size, metric_attrs)
+    instruments = _metric_instruments()
+    instruments["operation_duration"].record(duration, metric_attrs)
+    instruments["time_to_first_event"].record(ttfb, metric_attrs)
+    instruments["sse_event_count"].record(len(events), metric_attrs)
+    instruments["response_body_size"].record(response_size, metric_attrs)
     print(f"    -> {len(events)} events")
 
 
@@ -239,9 +251,8 @@ def run_tasks_get_reference() -> None:
     response = task
     start = time.perf_counter()
     attrs = _a2a_span_attrs(method, request_id=request_id, task=task)
-    with _reference_tracer.start_as_current_span(method, attributes=attrs) as span:
-        span.set_attribute("jsonrpc.protocol.version", "2.0")
-    duration = time.perf_counter() - start
+    with _reference_tracer.start_as_current_span(method, attributes=attrs):
+        duration = time.perf_counter() - start
     _record_operation_metrics(
         method,
         duration,

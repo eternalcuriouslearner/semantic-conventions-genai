@@ -65,7 +65,7 @@ attributes:
   - key: a2a.protocol.version
     type: string
     brief: The version of the A2A protocol used.
-    examples: ["0.3.0"]
+    examples: ["1.0"]
     stability: development
   - key: a2a.task.id
     type: string

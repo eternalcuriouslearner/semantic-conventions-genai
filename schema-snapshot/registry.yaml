@@ -884,7 +884,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -1069,29 +1069,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -1150,19 +1127,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -1292,7 +1256,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -1477,29 +1441,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -1558,19 +1499,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -1700,7 +1628,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -1885,29 +1813,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -1966,19 +1871,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -2110,7 +2002,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -2295,29 +2187,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -2376,19 +2245,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -2520,7 +2376,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -2705,29 +2561,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -2786,19 +2619,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -2904,7 +2724,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -3089,29 +2909,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -3170,19 +2967,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -3288,7 +3072,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -3473,29 +3257,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -3554,19 +3315,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -3674,7 +3422,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -3859,29 +3607,6 @@ refinements:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -3940,19 +3665,6 @@ refinements:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -7340,7 +7052,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -7777,7 +7489,7 @@ refinements:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -15904,7 +15616,7 @@ registry:
         value: agent/getAuthenticatedExtendedCard
   - brief: The version of the A2A protocol used.
     examples:
-    - 0.3.0
+    - \u00271.0\u0027
     key: a2a.protocol.version
     provenance:
       path: ./model/a2a/registry.yaml
@@ -17997,7 +17709,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -18182,29 +17894,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -18263,19 +17952,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -18404,7 +18080,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -18589,29 +18265,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -18670,19 +18323,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -18811,7 +18451,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -18996,29 +18636,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -19077,19 +18694,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -19220,7 +18824,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -19405,29 +19009,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -19486,19 +19067,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -19629,7 +19197,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -19814,29 +19382,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -19895,19 +19440,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -20012,7 +19544,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -20197,29 +19729,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -20278,19 +19787,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -20395,7 +19891,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -20580,29 +20076,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -20661,19 +20134,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -20780,7 +20240,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -20965,29 +20425,6 @@ registry:
           id: delete_memory_store
           stability: development
           value: delete_memory_store
-    - brief: |
-        Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response.
-      examples:
-      - \u00272.0\u0027
-      - \u00271.0\u0027
-      key: jsonrpc.protocol.version
-      requirement_level:
-        recommended: when the A2A JSON-RPC binding is used and the value is not `2.0`.
-      stability: development
-      type: string
-    - brief: |
-        A string representation of the `id` property of the request and its corresponding response.
-      examples:
-      - \u002710\u0027
-      - request-7
-      key: jsonrpc.request.id
-      note: |
-        Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
-        Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
-      requirement_level:
-        conditionally_required: When the A2A JSON-RPC binding is used and the request has an id.
-      stability: development
-      type: string
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
@@ -21046,19 +20483,6 @@ registry:
           id: quic
           stability: stable
           value: quic
-    - brief: The error code from the JSON-RPC response.
-      examples:
-      - OK
-      - DEADLINE_EXCEEDED
-      - \u0027-32602\u0027
-      key: rpc.response.status_code
-      note: |
-        Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-        Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
-      requirement_level:
-        conditionally_required: If the A2A JSON-RPC response contains an error code.
-      stability: release_candidate
-      type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
@@ -23900,7 +23324,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml
@@ -24336,7 +23760,7 @@ registry:
           value: agent/getAuthenticatedExtendedCard
     - brief: The version of the A2A protocol used.
       examples:
-      - 0.3.0
+      - \u00271.0\u0027
       key: a2a.protocol.version
       provenance:
         path: ./model/a2a/registry.yaml

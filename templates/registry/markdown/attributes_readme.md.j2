@@ -33,6 +33,6 @@ All registered attributes are listed by namespace in this registry.
 Currently, the following namespaces exist:
 
 {% for bundle in ctx -%}
-- [{{ bundle.id | title_case | acronym }}]({{ bundle.id | kebab_case }}.md)
+- [{{ attrs.namespace_display_name(bundle.id) }}]({{ bundle.id | kebab_case }}.md)
 {% endfor %}
 [developers recommendations]: {{ params.upstream_docs_base }}/docs/general/naming.md#recommendations-for-application-developers

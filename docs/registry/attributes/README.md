@@ -31,7 +31,7 @@ All registered attributes are listed by namespace in this registry.
 
 Currently, the following namespaces exist:
 
-- [A2a](a2a.md)
+- [A2A](a2a.md)
 - [AWS](aws.md)
 - [Gen AI](gen-ai.md)
 - [MCP](mcp.md)
