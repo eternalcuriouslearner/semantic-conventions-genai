@@ -16,14 +16,6 @@ MOCK_BASE_URL = os.environ["MOCK_LLM_URL"] + "/v1"
 _reference_tracer = reference_tracer()
 
 
-def compact_conversation_history(previous_messages, current_request):
-    """Return the compacted user message and whether compaction was performed."""
-    if not previous_messages:
-        return current_request, False
-    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
-    return f"{compacted_summary}\n\nCurrent request: {current_request}", True
-
-
 def response_has_compaction_item(response):
     """Return whether the Responses API output includes a ResponseCompactionItem."""
     for item in getattr(response, "output", []) or []:
@@ -31,6 +23,28 @@ def response_has_compaction_item(response):
         if item_type == "compaction":
             return True
     return False
+
+
+def responses_output_messages(response):
+    """Convert Responses API message output items into OTel output messages."""
+    output_messages = []
+    for item in getattr(response, "output", []) or []:
+        item_type = item.get("type") if isinstance(item, dict) else getattr(item, "type", None)
+        if item_type != "message":
+            continue
+        role = item.get("role") if isinstance(item, dict) else getattr(item, "role", None)
+        content = item.get("content", []) if isinstance(item, dict) else getattr(item, "content", [])
+        parts = []
+        for block in content or []:
+            block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
+            if block_type != "output_text":
+                continue
+            text = block.get("text") if isinstance(block, dict) else getattr(block, "text", None)
+            if text:
+                parts.append({"type": "text", "content": text})
+        if parts:
+            output_messages.append({"role": role or "assistant", "parts": parts})
+    return output_messages
 
 
 def run_chat_reference(client):
@@ -45,14 +59,9 @@ def run_chat_reference(client):
     request_frequency_penalty = 0.1
     request_presence_penalty = 0.2
     request_top_p = 0.9
-    previous_messages = [
-        "User asked for a friendly greeting.",
-        "Assistant should keep the answer short.",
-    ]
-    compacted_user_content, conversation_compacted = compact_conversation_history(previous_messages, "Say hello.")
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": compacted_user_content},
+        {"role": "user", "content": "Say hello."},
     ]
     system_instructions = [
         {"parts": [{"type": "text", "content": message["content"]}]}
@@ -73,7 +82,6 @@ def run_chat_reference(client):
     if port is not None:
         span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span("chat gpt-4o-mini", attributes=span_attributes) as span:
-        span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.request.choice.count", request_choice_count)
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute("gen_ai.request.temperature", request_temperature)
@@ -123,7 +131,6 @@ def run_chat_reference(client):
         # Emit inference operation details event
         event_attrs = {
             "gen_ai.operation.name": "chat",
-            "gen_ai.conversation.compacted": conversation_compacted,
             "gen_ai.request.model": request_model,
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
@@ -189,17 +196,45 @@ def run_responses_compaction_reference(client):
             context_management=[{"type": "compaction", "compact_threshold": 200000}],
         )
 
-        # Real provider-side instrumentation can derive this from a
-        # ResponseCompactionItem (`type: "compaction"`) in response.output,
-        # rather than guessing from input size or from the presence of the
-        # context_management request option.
-        span.set_attribute("gen_ai.conversation.compacted", response_has_compaction_item(response))
+        # Provider-side instrumentation derives this from the live SDK
+        # response: a ResponseCompactionItem (`type: "compaction"`) in
+        # response.output. The request option alone is not enough.
+        conversation_compacted = response_has_compaction_item(response)
+        span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.response.model", response.model)
         span.set_attribute("gen_ai.response.id", response.id)
+        output_messages = responses_output_messages(response)
+        if output_messages:
+            span.set_attribute("gen_ai.output.messages", json.dumps(output_messages))
         if response.usage:
             span.set_attribute("gen_ai.usage.input_tokens", response.usage.input_tokens)
             span.set_attribute("gen_ai.usage.output_tokens", response.usage.output_tokens)
-        print(f"    -> compacted: {response_has_compaction_item(response)}")
+
+        event_attrs = {
+            "gen_ai.operation.name": "chat",
+            "gen_ai.conversation.compacted": conversation_compacted,
+            "gen_ai.request.model": request_model,
+            "gen_ai.response.id": response.id,
+            "gen_ai.response.model": response.model,
+            "gen_ai.input.messages": json.dumps(
+                [{"role": "user", "parts": [{"type": "text", "content": conversation[0]["content"]}]}]
+            ),
+        }
+        if output_messages:
+            event_attrs["gen_ai.output.messages"] = json.dumps(output_messages)
+        if response.usage:
+            event_attrs["gen_ai.usage.input_tokens"] = response.usage.input_tokens
+            event_attrs["gen_ai.usage.output_tokens"] = response.usage.output_tokens
+        if host:
+            event_attrs["server.address"] = host
+        if port is not None:
+            event_attrs["server.port"] = port
+        reference_event_logger().emit(
+            event_name="gen_ai.client.inference.operation.details",
+            body="Inference operation details",
+            attributes=event_attrs,
+        )
+        print(f"    -> compacted: {conversation_compacted}")
 
 
 def run_chat_streaming_reference(client):

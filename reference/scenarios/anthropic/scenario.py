@@ -20,14 +20,6 @@ MOCK_BASE_URL = os.environ["MOCK_LLM_URL"]
 _reference_tracer = reference_tracer()
 
 
-def compact_conversation_history(previous_messages, current_request):
-    """Return the compacted user message and whether compaction was performed."""
-    if not previous_messages:
-        return current_request, False
-    compacted_summary = "Compacted prior conversation: " + " ".join(previous_messages)
-    return f"{compacted_summary}\n\nCurrent request: {current_request}", True
-
-
 def response_has_compaction_block(response):
     """Return whether Anthropic reported compaction in response content or usage."""
     if getattr(response, "stop_reason", None) == "compaction":
@@ -46,12 +38,7 @@ def run_chat():
     print("  [chat] basic chat completion (reference implementation)")
     request_model = "claude-sonnet-4-20250514"
     request_max_tokens = 100
-    previous_messages = [
-        "User asked for a friendly greeting.",
-        "Assistant should keep the answer short.",
-    ]
-    compacted_user_content, conversation_compacted = compact_conversation_history(previous_messages, "Say hello.")
-    messages = [{"role": "user", "content": compacted_user_content}]
+    messages = [{"role": "user", "content": "Say hello."}]
     client = anthropic.Anthropic(base_url=MOCK_BASE_URL, api_key="mock-key")
 
     host, port = mock_server_host_port(MOCK_BASE_URL)
@@ -65,7 +52,6 @@ def run_chat():
     if port is not None:
         span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span("chat claude-sonnet-4-20250514", attributes=span_attributes) as span:
-        span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute(
             "gen_ai.input.messages",
@@ -105,7 +91,6 @@ def run_chat():
         # Emit inference operation details event
         event_attrs = {
             "gen_ai.operation.name": "chat",
-            "gen_ai.conversation.compacted": conversation_compacted,
             "gen_ai.request.model": request_model,
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
@@ -180,9 +165,10 @@ def run_compaction_reference():
             betas=["context-management-2026-01-12"],
         )
 
-        # Real Anthropic instrumentation can derive this from a compaction
-        # content block, stop_reason="compaction", or usage iteration with
-        # type="compaction", rather than guessing from the request option.
+        # Provider-side instrumentation derives this from the live SDK
+        # response: a compaction content block, stop_reason="compaction", or
+        # usage iteration with type="compaction". The request option alone is
+        # not enough.
         conversation_compacted = response_has_compaction_block(resp)
         span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.response.model", resp.model)
@@ -191,6 +177,30 @@ def run_compaction_reference():
         if resp.usage:
             span.set_attribute("gen_ai.usage.input_tokens", resp.usage.input_tokens)
             span.set_attribute("gen_ai.usage.output_tokens", resp.usage.output_tokens)
+
+        event_attrs = {
+            "gen_ai.operation.name": "chat",
+            "gen_ai.conversation.compacted": conversation_compacted,
+            "gen_ai.request.model": request_model,
+            "gen_ai.response.id": resp.id,
+            "gen_ai.response.model": resp.model,
+            "gen_ai.response.finish_reasons": [resp.stop_reason],
+            "gen_ai.input.messages": json.dumps(
+                [{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]
+            ),
+        }
+        if resp.usage:
+            event_attrs["gen_ai.usage.input_tokens"] = resp.usage.input_tokens
+            event_attrs["gen_ai.usage.output_tokens"] = resp.usage.output_tokens
+        if host:
+            event_attrs["server.address"] = host
+        if port is not None:
+            event_attrs["server.port"] = port
+        reference_event_logger().emit(
+            event_name="gen_ai.client.inference.operation.details",
+            body="Inference operation details",
+            attributes=event_attrs,
+        )
         print(f"    -> compacted: {conversation_compacted}")
 
 
