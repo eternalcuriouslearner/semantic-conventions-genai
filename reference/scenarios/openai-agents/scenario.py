@@ -8,7 +8,6 @@ import asyncio
 import json
 import os
 
-from opentelemetry.trace import SpanKind
 from reference_shared import flush_and_shutdown, mock_server_host_port, reference_tracer, setup_otel
 
 MOCK_BASE_URL = os.environ["MOCK_LLM_URL"] + "/v1"
@@ -63,8 +62,12 @@ async def run_agent():
         "gen_ai.request.model": request_model,
         "gen_ai.agent.name": agent.name,
     }
+    if host:
+        agent_span_attributes["server.address"] = host
+    if port is not None:
+        agent_span_attributes["server.port"] = port
     with _reference_tracer.start_as_current_span(
-        "invoke_agent test-agent", kind=SpanKind.INTERNAL, attributes=agent_span_attributes
+        "invoke_agent test-agent", attributes=agent_span_attributes
     ) as agent_span:
         agent_span.set_attribute(
             "gen_ai.system_instructions", json.dumps([{"parts": [{"type": "text", "content": agent.instructions}]}])
