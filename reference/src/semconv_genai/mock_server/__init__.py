@@ -12,11 +12,11 @@ import argparse
 
 from flask import Flask
 
-from . import anthropic, assistants, bedrock, bedrock_agent, bedrock_agentcore, cohere, google_genai, openai
+from . import a2a, anthropic, assistants, bedrock, bedrock_agent, bedrock_agentcore, cohere, google_genai, openai
 
 app = Flask(__name__)
 
-for module in (openai, anthropic, google_genai, bedrock, bedrock_agent, bedrock_agentcore, cohere, assistants):
+for module in (openai, anthropic, google_genai, bedrock, bedrock_agent, bedrock_agentcore, cohere, assistants, a2a):
     app.register_blueprint(module.bp)
 
 
