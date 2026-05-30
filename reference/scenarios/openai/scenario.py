@@ -26,10 +26,23 @@ def response_has_compaction_item(response):
 
 
 def responses_output_messages(response):
-    """Convert Responses API message output items into OTel output messages."""
+    """Convert Responses API output items into OTel output messages."""
     output_messages = []
     for item in getattr(response, "output", []) or []:
         item_type = item.get("type") if isinstance(item, dict) else getattr(item, "type", None)
+        if item_type == "compaction":
+            compaction_part = {"type": "compaction"}
+            compaction_id = item.get("id") if isinstance(item, dict) else getattr(item, "id", None)
+            if compaction_id:
+                compaction_part["id"] = compaction_id
+            output_messages.append(
+                {
+                    "role": "assistant",
+                    "parts": [compaction_part],
+                    "finish_reason": "compaction",
+                }
+            )
+            continue
         if item_type != "message":
             continue
         role = item.get("role") if isinstance(item, dict) else getattr(item, "role", None)

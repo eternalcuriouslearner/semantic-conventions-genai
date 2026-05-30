@@ -31,6 +31,33 @@ def response_has_compaction_block(response):
     return any(getattr(iteration, "type", None) == "compaction" for iteration in getattr(usage, "iterations", []) or [])
 
 
+def response_output_messages(response):
+    """Convert Anthropic response content blocks into OTel output messages."""
+    parts = []
+    for block in getattr(response, "content", []) or []:
+        block_type = getattr(block, "type", None)
+        if block_type == "text" and getattr(block, "text", None):
+            parts.append({"type": "text", "content": block.text})
+        elif block_type == "compaction":
+            compaction_part = {"type": "compaction"}
+            compaction_id = getattr(block, "id", None)
+            compaction_content = getattr(block, "content", None)
+            if compaction_id:
+                compaction_part["id"] = compaction_id
+            if compaction_content:
+                compaction_part["content"] = compaction_content
+            parts.append(compaction_part)
+    if not parts:
+        return []
+    return [
+        {
+            "role": "assistant",
+            "parts": parts,
+            "finish_reason": getattr(response, "stop_reason", None) or "stop",
+        }
+    ]
+
+
 def run_chat():
     """Scenario: basic chat via Anthropic with reference implementation."""
     import anthropic
@@ -65,6 +92,7 @@ def run_chat():
         span.set_attribute("gen_ai.response.model", resp.model)
         span.set_attribute("gen_ai.response.id", resp.id)
         span.set_attribute("gen_ai.response.finish_reasons", [resp.stop_reason])
+        output_messages = response_output_messages(resp)
         if resp.usage:
             cache_creation = getattr(resp.usage, "cache_creation_input_tokens", None) or 0
             cache_read = getattr(resp.usage, "cache_read_input_tokens", None) or 0
@@ -75,18 +103,8 @@ def run_chat():
                 span.set_attribute("gen_ai.usage.cache_creation.input_tokens", cache_creation)
             if cache_read:
                 span.set_attribute("gen_ai.usage.cache_read.input_tokens", cache_read)
-        output_messages = json.dumps(
-            [
-                {
-                    "role": "assistant",
-                    "parts": [{"type": "text", "content": block.text}],
-                    "finish_reason": resp.stop_reason,
-                }
-                for block in resp.content
-                if hasattr(block, "text")
-            ]
-        )
-        span.set_attribute("gen_ai.output.messages", output_messages)
+        output_messages_json = json.dumps(output_messages)
+        span.set_attribute("gen_ai.output.messages", output_messages_json)
 
         # Emit inference operation details event
         event_attrs = {
@@ -98,7 +116,7 @@ def run_chat():
             "gen_ai.input.messages": json.dumps(
                 [{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]
             ),
-            "gen_ai.output.messages": output_messages,
+            "gen_ai.output.messages": output_messages_json,
         }
         if resp.usage:
             cache_creation = getattr(resp.usage, "cache_creation_input_tokens", None) or 0
@@ -177,6 +195,9 @@ def run_compaction_reference():
         if resp.usage:
             span.set_attribute("gen_ai.usage.input_tokens", resp.usage.input_tokens)
             span.set_attribute("gen_ai.usage.output_tokens", resp.usage.output_tokens)
+        output_messages = response_output_messages(resp)
+        if output_messages:
+            span.set_attribute("gen_ai.output.messages", json.dumps(output_messages))
 
         event_attrs = {
             "gen_ai.operation.name": "chat",
@@ -189,6 +210,8 @@ def run_compaction_reference():
                 [{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]
             ),
         }
+        if output_messages:
+            event_attrs["gen_ai.output.messages"] = json.dumps(output_messages)
         if resp.usage:
             event_attrs["gen_ai.usage.input_tokens"] = resp.usage.input_tokens
             event_attrs["gen_ai.usage.output_tokens"] = resp.usage.output_tokens
