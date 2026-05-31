@@ -60,7 +60,9 @@ def input_messages(messages):
                     if text:
                         parts.append({"type": "text", "content": text})
                 elif block_type == "compaction":
-                    compaction_content = block.get("content") if isinstance(block, dict) else getattr(block, "content", None)
+                    compaction_content = (
+                        block.get("content") if isinstance(block, dict) else getattr(block, "content", None)
+                    )
                     compaction_part = {"type": "compaction"}
                     if compaction_content:
                         compaction_part["content"] = compaction_content
