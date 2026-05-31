@@ -23,19 +23,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -4166,19 +4164,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -4886,19 +4882,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -5597,19 +5591,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -7144,19 +7136,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -11212,19 +11202,17 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -12011,15 +11999,13 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: string
-  - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+  - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
     examples:
     - true
     key: gen_ai.conversation.compacted
     note: |
-      Compaction may include summarization, pruning, sliding-window selection, hierarchical memory, or
-      provider/framework-managed context reduction.
-
-      If unset, the compaction state is unknown.
+      Instrumentations SHOULD set this attribute to `true` only when they can reliably
+      determine that context compaction was applied.
     provenance:
       path: ./model/gen-ai/registry.yaml
     stability: development
@@ -13144,19 +13130,17 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -17561,19 +17545,17 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
       examples:
       - true
       key: gen_ai.conversation.compacted
       note: |
-        Set to `true` when the provider or client SDK compacts conversation
-        history server-side or in the client before invoking the model
-        (e.g., managed memory APIs, server-side conversation state,
-        context-window auto-truncation).
+        Instrumentations SHOULD set this attribute to `true` only when they can reliably
+        determine that context compaction was applied.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when known
+        recommended: when available
       stability: development
       type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.

@@ -243,12 +243,10 @@ attributes:
     stability: development
   - key: gen_ai.conversation.compacted
     type: boolean
-    brief: Indicates whether the effective conversation history used for this operation is a compacted view of a longer prior conversation.
+    brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
     note: |
-      Compaction may include summarization, pruning, sliding-window selection, hierarchical memory, or
-      provider/framework-managed context reduction.
-
-      If unset, the compaction state is unknown.
+      Instrumentations SHOULD set this attribute to `true` only when they can reliably
+      determine that context compaction was applied.
     examples: [true]
     stability: development
   - key: gen_ai.agent.id

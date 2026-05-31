@@ -31,6 +31,45 @@ def response_has_compaction_block(response):
     return any(getattr(iteration, "type", None) == "compaction" for iteration in getattr(usage, "iterations", []) or [])
 
 
+def input_has_compaction_block(messages):
+    """Return whether Anthropic input messages include a compaction block."""
+    for message in messages:
+        content = message.get("content") if isinstance(message, dict) else getattr(message, "content", None)
+        if isinstance(content, list):
+            for block in content:
+                block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
+                if block_type == "compaction":
+                    return True
+    return False
+
+
+def input_messages(messages):
+    """Convert Anthropic input messages into OTel input messages."""
+    converted_messages = []
+    for message in messages:
+        role = message.get("role") if isinstance(message, dict) else getattr(message, "role", None)
+        content = message.get("content") if isinstance(message, dict) else getattr(message, "content", None)
+        parts = []
+        if isinstance(content, str):
+            parts.append({"type": "text", "content": content})
+        elif isinstance(content, list):
+            for block in content:
+                block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
+                if block_type == "text":
+                    text = block.get("text") if isinstance(block, dict) else getattr(block, "text", None)
+                    if text:
+                        parts.append({"type": "text", "content": text})
+                elif block_type == "compaction":
+                    compaction_content = block.get("content") if isinstance(block, dict) else getattr(block, "content", None)
+                    compaction_part = {"type": "compaction"}
+                    if compaction_content:
+                        compaction_part["content"] = compaction_content
+                    parts.append(compaction_part)
+        if parts:
+            converted_messages.append({"role": role or "user", "parts": parts})
+    return converted_messages
+
+
 def response_output_messages(response):
     """Convert Anthropic response content blocks into OTel output messages."""
     parts = []
@@ -40,10 +79,7 @@ def response_output_messages(response):
             parts.append({"type": "text", "content": block.text})
         elif block_type == "compaction":
             compaction_part = {"type": "compaction"}
-            compaction_id = getattr(block, "id", None)
             compaction_content = getattr(block, "content", None)
-            if compaction_id:
-                compaction_part["id"] = compaction_id
             if compaction_content:
                 compaction_part["content"] = compaction_content
             parts.append(compaction_part)
@@ -66,6 +102,7 @@ def run_chat():
     request_model = "claude-sonnet-4-20250514"
     request_max_tokens = 100
     messages = [{"role": "user", "content": "Say hello."}]
+    input_messages_json = json.dumps(input_messages(messages))
     client = anthropic.Anthropic(base_url=MOCK_BASE_URL, api_key="mock-key")
 
     host, port = mock_server_host_port(MOCK_BASE_URL)
@@ -82,7 +119,7 @@ def run_chat():
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute(
             "gen_ai.input.messages",
-            json.dumps([{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]),
+            input_messages_json,
         )
         resp = client.messages.create(
             model=request_model,
@@ -113,9 +150,7 @@ def run_chat():
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
             "gen_ai.response.finish_reasons": [resp.stop_reason],
-            "gen_ai.input.messages": json.dumps(
-                [{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]
-            ),
+            "gen_ai.input.messages": input_messages_json,
             "gen_ai.output.messages": output_messages_json,
         }
         if resp.usage:
@@ -148,7 +183,19 @@ def run_compaction_reference():
     print("  [chat_compaction] chat with server-side compaction (reference implementation)")
     request_model = "claude-sonnet-4-20250514"
     request_max_tokens = 100
-    messages = [{"role": "user", "content": "Continue this long conversation."}]
+    messages = [
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "compaction",
+                    "encrypted_content": "opaque encrypted compaction state from a prior turn",
+                }
+            ],
+        },
+        {"role": "user", "content": "Continue this long conversation."},
+    ]
+    input_messages_json = json.dumps(input_messages(messages))
     client = anthropic.Anthropic(base_url=MOCK_BASE_URL, api_key="mock-key")
 
     host, port = mock_server_host_port(MOCK_BASE_URL)
@@ -165,7 +212,7 @@ def run_compaction_reference():
         span.set_attribute("gen_ai.request.max_tokens", request_max_tokens)
         span.set_attribute(
             "gen_ai.input.messages",
-            json.dumps([{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]),
+            input_messages_json,
         )
         resp = client.beta.messages.create(
             model=request_model,
@@ -183,11 +230,10 @@ def run_compaction_reference():
             betas=["context-management-2026-01-12"],
         )
 
-        # Provider-side instrumentation derives this from the live SDK
-        # response: a compaction content block, stop_reason="compaction", or
-        # usage iteration with type="compaction". The request option alone is
-        # not enough.
-        conversation_compacted = response_has_compaction_block(resp)
+        # Provider-side instrumentation derives this from live SDK-visible
+        # state: either a compaction block in the input conversation carried
+        # forward from a prior turn, or a response compaction signal.
+        conversation_compacted = input_has_compaction_block(messages) or response_has_compaction_block(resp)
         span.set_attribute("gen_ai.conversation.compacted", conversation_compacted)
         span.set_attribute("gen_ai.response.model", resp.model)
         span.set_attribute("gen_ai.response.id", resp.id)
@@ -206,9 +252,7 @@ def run_compaction_reference():
             "gen_ai.response.id": resp.id,
             "gen_ai.response.model": resp.model,
             "gen_ai.response.finish_reasons": [resp.stop_reason],
-            "gen_ai.input.messages": json.dumps(
-                [{"role": m["role"], "parts": [{"type": "text", "content": m["content"]}]} for m in messages]
-            ),
+            "gen_ai.input.messages": input_messages_json,
         }
         if output_messages:
             event_attrs["gen_ai.output.messages"] = json.dumps(output_messages)
