@@ -105,6 +105,7 @@
                 "length",
                 "content_filter",
                 "tool_call",
+                "compaction",
                 "error"
             ],
             "title": "FinishReason",

@@ -28,6 +28,7 @@ def response_has_compaction_item(response):
 def responses_output_messages(response):
     """Convert Responses API output items into OTel output messages."""
     output_messages = []
+    pending_parts = []
     for item in getattr(response, "output", []) or []:
         item_type = item.get("type") if isinstance(item, dict) else getattr(item, "type", None)
         if item_type == "compaction":
@@ -35,19 +36,17 @@ def responses_output_messages(response):
             compaction_id = item.get("id") if isinstance(item, dict) else getattr(item, "id", None)
             if compaction_id:
                 compaction_part["id"] = compaction_id
-            output_messages.append(
-                {
-                    "role": "assistant",
-                    "parts": [compaction_part],
-                    "finish_reason": "compaction",
-                }
-            )
+            if output_messages and output_messages[-1].get("role") == "assistant":
+                output_messages[-1]["parts"].append(compaction_part)
+            else:
+                pending_parts.append(compaction_part)
             continue
         if item_type != "message":
             continue
         role = item.get("role") if isinstance(item, dict) else getattr(item, "role", None)
         content = item.get("content", []) if isinstance(item, dict) else getattr(item, "content", [])
-        parts = []
+        parts = pending_parts
+        pending_parts = []
         for block in content or []:
             block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
             if block_type != "output_text":
@@ -57,6 +56,8 @@ def responses_output_messages(response):
                 parts.append({"type": "text", "content": text})
         if parts:
             output_messages.append({"role": role or "assistant", "parts": parts})
+    if pending_parts:
+        output_messages.append({"role": "assistant", "parts": pending_parts, "finish_reason": "compaction"})
     return output_messages
 
 
