@@ -39,3 +39,5 @@
 - Clarify that a GenAI span SHOULD cover the duration of the operation
   as observed by the caller, including any retries.
   ([#216](https://github.com/open-telemetry/semantic-conventions-genai/pull/216))
+- Clarify that `gen_ai.conversation.id` should only be populated from an available conversation identifier,
+  and that instrumentations should not use fallback values such as generated UUIDs, trace IDs, or request-content hashes.
