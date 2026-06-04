@@ -50,3 +50,6 @@
   (e.g., Anthropic `top_k`, Cohere `k`) and not OpenAI's `top_logprobs`
   output-shaping parameter.
   ([#217](https://github.com/open-telemetry/semantic-conventions-genai/pull/217))
+- Clarify MCP context propagation now that SEP-414 defines `traceparent`,
+  `tracestate`, and `baggage` as unprefixed `params._meta` keys.
+  ([#220](https://github.com/open-telemetry/semantic-conventions-genai/pull/220))

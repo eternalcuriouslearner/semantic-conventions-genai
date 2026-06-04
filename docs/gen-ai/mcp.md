@@ -42,30 +42,28 @@ HTTP request in the corresponding request and response streams.
 
 ### Context propagation
 
-Model Context Protocol works on top of JSON-RPC and does not define a standard
-Trace Context propagation mechanism. MCP is transport independent and works across different transports. The specification expects clients to implement at least stdio or Streamable HTTP.
+Model Context Protocol works on top of JSON-RPC. MCP is transport independent
+and works across different transports. The specification expects clients to
+implement at least stdio or Streamable HTTP.
 
 HTTP trace context propagation only covers the HTTP request, but not the individual
 messages client and server exchange within the request/response streams.
 
-Instrumentations SHOULD propagate trace context inside MCP request [`params._meta`](https://modelcontextprotocol.io/specification/2025-11-25/basic#_meta)
-property bag.
+Instrumentations SHOULD propagate context using the configured
+[OpenTelemetry propagators](https://opentelemetry.io/docs/specs/otel/context/api-propagators/)
+by injecting it into the MCP request
+[`params._meta`](https://modelcontextprotocol.io/specification/2025-11-25/basic#_meta)
+property bag when creating a request or notification. The receiver extracts the
+context from `params._meta` and uses it as the remote parent.
 
-> [!NOTE]
-> The propagation format defined here is likely to change. Please check out
-> context propagation discussions in MCP repository:
-> [modelcontextprotocol#246](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/246)
-> and
-> [modelcontextprotocol#414](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/414).
->
-> If the MCP or JSON-RPC specifications provide official guidance, instrumentations
-> SHOULD prioritize that over the recommendation provided in this section.
+Although the MCP convention expects keys in `params._meta` to be DNS-prefixed,
+the context propagation keys SHOULD be written unprefixed.
+[SEP-414](https://modelcontextprotocol.io/community/seps/414-request-meta)
+defines this explicit handling for the W3C Trace Context and Baggage keys
+(`traceparent`, `tracestate`, and `baggage`).
 
-For example, when using [W3C Trace Context](https://www.w3.org/TR/trace-context/) propagation,
-inject `traceparent` and `tracestate` to the MCP message `params._meta` when creating request
-or notification and extract them on the receiver side to use as the remote parent.
-
-Here's an example of tool call request with injected trace context.
+Here's an example of a tool call request with injected
+[W3C Trace Context](https://www.w3.org/TR/trace-context/).
 
 ```json
 {
@@ -82,9 +80,9 @@ Here's an example of tool call request with injected trace context.
 }
 ```
 
-Or, if user application uses [W3C Baggage](https://www.w3.org/TR/baggage/) in addition
-to the Trace-Context, `baggage` should be propagated in the same `params._meta`
-property bag similarly to the following example:
+If the application also uses [W3C Baggage](https://www.w3.org/TR/baggage/),
+propagate `baggage` in the same `params._meta` property bag, as in the following
+example:
 
 ```json
 {
