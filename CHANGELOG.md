@@ -4,6 +4,11 @@
 
 ### 🛑 Breaking changes 🛑
 
+- Change `gen_ai.request.top_k` type from `double` to `int` and scope it to
+  decoding only. Retrieval spans now use the new
+  `gen_ai.retrieval.top_k` attribute instead of `gen_ai.request.top_k`.
+  ([#217](https://github.com/open-telemetry/semantic-conventions-genai/pull/217))
+
 ### 🚩 Deprecations 🚩
 
 ### 🚀 New components 🚀
@@ -41,3 +46,7 @@
   ([#216](https://github.com/open-telemetry/semantic-conventions-genai/pull/216))
 - Clarify that `gen_ai.conversation.id` should only be populated from an available conversation identifier,
   and that instrumentations should not use fallback values such as generated UUIDs, trace IDs, or request-content hashes.
+- Clarify that `gen_ai.request.top_k` is the top-K sampling/decoding parameter
+  (e.g., Anthropic `top_k`, Cohere `k`) and not OpenAI's `top_logprobs`
+  output-shaping parameter.
+  ([#217](https://github.com/open-telemetry/semantic-conventions-genai/pull/217))
