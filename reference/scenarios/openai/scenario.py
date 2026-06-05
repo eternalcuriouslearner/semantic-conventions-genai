@@ -55,7 +55,7 @@ def responses_output_messages(response):
             if text:
                 parts.append({"type": "text", "content": text})
         if parts:
-            output_messages.append({"role": role or "assistant", "parts": parts})
+            output_messages.append({"role": role or "assistant", "parts": parts, "finish_reason": "stop"})
     if pending_parts:
         output_messages.append({"role": "assistant", "parts": pending_parts, "finish_reason": "compaction"})
     return output_messages
