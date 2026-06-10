@@ -14,6 +14,12 @@ def _task(task_id="task-calendar-summary", context_id="ctx-calendar", state="TAS
         "id": task_id,
         "contextId": context_id,
         "status": {"state": state},
+        "artifacts": [
+            {
+                "artifactId": "art-001",
+                "parts": [{"text": "Calendar summary artifact."}],
+            }
+        ],
     }
 
 

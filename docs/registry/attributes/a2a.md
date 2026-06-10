@@ -7,12 +7,21 @@
 
 | Key | Stability | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- |
+| <a id="a2a-agent-card-url" href="#a2a-agent-card-url">`a2a.agent.card.url`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The endpoint URL of the target A2A agent's Agent Card. | `https://a2a-protocol.org/example/a2a/v1/card` |
 | <a id="a2a-context-id" href="#a2a-context-id">`a2a.context.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The A2A context identifier used to correlate related messages and tasks. | `ctx-7b8f0f5f0d6a4f65` |
+| <a id="a2a-message-id" href="#a2a-message-id">`a2a.message.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of the A2A message. | `msg-user-1234` |
+| <a id="a2a-message-referenced-task-ids" href="#a2a-message-referenced-task-ids">`a2a.message.referenced_task_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
 | <a id="a2a-method-name" href="#a2a-method-name">`a2a.method.name`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
+| <a id="a2a-protocol-activated-extensions" href="#a2a-protocol-activated-extensions">`a2a.protocol.activated_extensions`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Protocol extensions successfully activated by the server for this request. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
+| <a id="a2a-protocol-binding" href="#a2a-protocol-binding">`a2a.protocol.binding`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The underlying transport or transport binding used. [1] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
+| <a id="a2a-protocol-requested-extensions" href="#a2a-protocol-requested-extensions">`a2a.protocol.requested_extensions`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | <a id="a2a-protocol-version" href="#a2a-protocol-version">`a2a.protocol.version`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The version of the A2A protocol used. | `1.0` |
+| <a id="a2a-task-artifact-ids" href="#a2a-task-artifact-ids">`a2a.task.artifact_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Artifact IDs associated with the A2A task. | `["art-001", "art-002"]` |
 | <a id="a2a-task-id" href="#a2a-task-id">`a2a.task.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
 | <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
 
+
+**[1] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
 ---
 
@@ -31,6 +40,16 @@
 | `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+
+---
+
+`a2a.protocol.binding` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value | Description | Stability |
+| --- | --- | --- |
+| `GRPC` | gRPC transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `HTTP+JSON` | HTTP+JSON/REST transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `JSONRPC` | JSON-RPC 2.0 transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 

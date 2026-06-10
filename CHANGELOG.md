@@ -8,8 +8,8 @@
 
 ### 🚀 New components 🚀
 
-- Add A2A protocol semantic conventions for client/server spans, protocol attributes, task/context
-  attributes, and A2A client/server operation and streaming response metrics.
+- Add A2A protocol semantic conventions for client/server spans, covering protocol, transport
+  binding, message, task, context, extension, and agent identity attributes.
 
 ### 💡 Enhancements 💡
 

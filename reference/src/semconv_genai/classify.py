@@ -33,6 +33,14 @@ def classify_span(span_name: str, span_kind: str, span_attrs: dict[str, object])
     op_name = str(span_attrs.get("gen_ai.operation.name", "")).lower()
     detected = {key for key in SPAN_SPECS if _matches_spec(op_name, span_attrs, key)}
 
+    # A2A spans carry agent identity attributes on every method, but only
+    # spans explicitly marked with `gen_ai.operation.name=invoke_agent`
+    # (e.g. message/send) are agent invocations; task-management calls
+    # such as tasks/get are not.
+    if span_attrs.get("a2a.method.name") is not None and op_name != "invoke_agent":
+        detected.discard("invoke_agent_client")
+        detected.discard("invoke_agent_internal")
+
     # invoke_agent is represented as two span types (client vs internal) that
     # share op_name/discriminator_attrs; disambiguate by remote-server attrs.
     if "invoke_agent_client" in detected or "invoke_agent_internal" in detected:

@@ -67,6 +67,63 @@ attributes:
     brief: The version of the A2A protocol used.
     examples: ["1.0"]
     stability: development
+  - key: a2a.protocol.binding
+    type:
+      members:
+        - id: jsonrpc
+          value: JSONRPC
+          brief: >
+            JSON-RPC 2.0 transport binding.
+          stability: development
+        - id: grpc
+          value: GRPC
+          brief: >
+            gRPC transport binding.
+          stability: development
+        - id: http_json
+          value: HTTP+JSON
+          brief: >
+            HTTP+JSON/REST transport binding.
+          stability: development
+    brief: The underlying transport or transport binding used.
+    note: >
+      The well-known values match the transport protocol identifiers defined
+      by the [A2A specification](https://a2a-protocol.org/latest/specification/).
+    stability: development
+  - key: a2a.message.id
+    type: string
+    brief: The unique identifier of the A2A message.
+    examples: ["msg-user-1234"]
+    stability: development
+  - key: a2a.message.referenced_task_ids
+    type: string[]
+    brief: Task IDs referenced or linked in the A2A request message.
+    examples:
+      - [task-abc-5678]
+    stability: development
+  - key: a2a.task.artifact_ids
+    type: string[]
+    brief: Artifact IDs associated with the A2A task.
+    examples:
+      - [art-001, art-002]
+    stability: development
+  - key: a2a.agent.card.url
+    type: string
+    brief: The endpoint URL of the target A2A agent's Agent Card.
+    examples: ["https://a2a-protocol.org/example/a2a/v1/card"]
+    stability: development
+  - key: a2a.protocol.requested_extensions
+    type: string[]
+    brief: Protocol extensions requested by the client.
+    examples:
+      - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
+    stability: development
+  - key: a2a.protocol.activated_extensions
+    type: string[]
+    brief: Protocol extensions successfully activated by the server for this request.
+    examples:
+      - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
+    stability: development
   - key: a2a.task.id
     type: string
     brief: The unique identifier of an A2A task.

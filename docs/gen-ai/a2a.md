@@ -11,16 +11,7 @@ linkTitle: Agent2Agent Protocol
 - [Spans](#spans)
   - [Client](#client)
   - [Server](#server)
-- [Metrics](#metrics)
-  - [Metric: `a2a.client.operation.duration`](#metric-a2aclientoperationduration)
-  - [Metric: `a2a.server.operation.duration`](#metric-a2aserveroperationduration)
-  - [Metric: `a2a.client.response.time_to_first_event`](#metric-a2aclientresponsetime_to_first_event)
-  - [Metric: `a2a.server.response.time_to_first_event`](#metric-a2aserverresponsetime_to_first_event)
-  - [Metric: `a2a.client.response.sse.event.count`](#metric-a2aclientresponsesseeventcount)
-  - [Metric: `a2a.server.response.sse.event.count`](#metric-a2aserverresponsesseeventcount)
-  - [Metric: `a2a.client.response.body.size`](#metric-a2aclientresponsebodysize)
-  - [Metric: `a2a.server.response.body.size`](#metric-a2aserverresponsebodysize)
-- [Relationship to HTTP and JSON-RPC](#relationship-to-http-and-json-rpc)
+- [Relationship to HTTP, JSON-RPC, and gRPC](#relationship-to-http-json-rpc-and-grpc)
 
 <!-- tocstop -->
 
@@ -52,7 +43,14 @@ This span is reported by the A2A client when it initiates an A2A
 request. It covers the time to receive the response for non-streaming
 calls and the time to consume the response stream for streaming calls.
 
-**Span name** SHOULD be `{a2a.method.name}`.
+**Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
+low-cardinality target is not available, the span name MUST fall back
+to `{a2a.method.name}`.
+
+**Span status** SHOULD be set to `ERROR` if the request didn't complete
+successfully. The status description SHOULD match the protocol error
+message.
 
 A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
 when the A2A method invokes an agent. In that case, instrumentation
@@ -63,30 +61,40 @@ the logical A2A request and task lifecycle.
 
 **Span kind** SHOULD be `CLIENT`.
 
-**Span status** SHOULD follow the [Recording Errors](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/general/recording-errors.md) document.
-
 **Attributes:**
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
 | [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
 | [`a2a.context.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The A2A context identifier used to correlate related messages and tasks. | `ctx-7b8f0f5f0d6a4f65` |
+| [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [3] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
 | [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [5] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. | |
-| [`jsonrpc.request.id`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [6] | string | A string representation of the `id` property of the request and its corresponding response. [7] | `10`; `request-7` |
-| [`rpc.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` [8] | string | The error code from the JSON-RPC response. [9] | `OK`; `DEADLINE_EXCEEDED`; `-32602` |
+| [`http.request.method`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | string | HTTP request method. [6] | `GET`; `POST`; `DELETE` |
+| [`http.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | int | [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6). | `200`; `400` |
+| [`http.route`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | string | The matched route template for the request. This MUST be low-cardinality and include all static path segments, with dynamic path segments represented with placeholders. [7] | `/message:send`; `/tasks/{taskId}` |
+| [`jsonrpc.request.id`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | A string representation of the `id` property of the request and its corresponding response. [9] | `10`; `request-7` |
+| [`rpc.method`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` When the A2A gRPC binding is used. | string | The fully-qualified logical name of the method from the RPC interface perspective. [10] | `SendMessage`; `SendStreamingMessage` |
+| [`rpc.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` [11] | string | The error code from the JSON-RPC or gRPC response. [12] | `OK`; `DEADLINE_EXCEEDED`; `-32602` |
+| [`a2a.agent.card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. | `https://a2a-protocol.org/example/a2a/v1/card` |
+| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [13] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
+| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [14] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
+| [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [10] | string | The name of the GenAI operation being performed. [11] | `invoke_agent` |
-| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [12] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [13] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [14] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [15] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [16] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [17] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [18] | `80`; `8080`; `443` |
+| [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | Artifact IDs associated with the A2A task. | `["art-001", "art-002"]` |
+| [`gen_ai.agent.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [15] | string | The unique identifier of the GenAI agent. | `asst_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.agent.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [16] | string | Human-readable name of the GenAI agent provided by the application. | `Math Tutor`; `Fiction Writer` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [17] | string | The name of the GenAI operation being performed. [18] | `invoke_agent` |
+| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [19] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
+| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [20] | `http`; `grpc` |
+| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [21] | `1.1`; `2` |
+| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [22] | `tcp`; `quic` |
+| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [23] | `jsonrpc` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [24] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [25] | `80`; `8080`; `443` |
 
 **[1] `a2a.context.id`:** When the A2A request or response contains context id.
 
@@ -99,37 +107,72 @@ JSON-RPC error code when a JSON-RPC error is returned.
 
 **[5] `gen_ai.conversation.id`:** When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
 
-**[6] `jsonrpc.request.id`:** When the A2A JSON-RPC binding is used and the request has an id.
+**[6] `http.request.method`:** HTTP request method value SHOULD be "known" to the instrumentation.
+By default, this convention defines "known" methods as the ones listed in [RFC9110](https://www.rfc-editor.org/rfc/rfc9110.html#name-methods),
+the PATCH method defined in [RFC5789](https://www.rfc-editor.org/rfc/rfc5789.html)
+and the QUERY method defined in [httpbis-safe-method-w-body](https://datatracker.ietf.org/doc/draft-ietf-httpbis-safe-method-w-body/?include_text=1).
 
-**[7] `jsonrpc.request.id`:** Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
+If the HTTP request method is not known to instrumentation, it MUST set the `http.request.method` attribute to `_OTHER`.
+
+If the HTTP instrumentation could end up converting valid HTTP request methods to `_OTHER`, then it MUST provide a way to override
+the list of known HTTP methods. If this override is done via environment variable, then the environment variable MUST be named
+OTEL_INSTRUMENTATION_HTTP_KNOWN_METHODS and support a comma-separated list of case-sensitive known HTTP methods.
+
+![Development](https://img.shields.io/badge/-development-blue)
+If this override is done via declarative configuration, then the list MUST be configurable via the `known_methods` property
+(an array of case-sensitive strings with minimum items 0) under `.instrumentation/development.general.http.client` and/or
+`.instrumentation/development.general.http.server`.
+
+In either case, this list MUST be a full override of the default known methods,
+it is not a list of known methods in addition to the defaults.
+
+HTTP method names are case-sensitive and `http.request.method` attribute value MUST match a known HTTP method name exactly.
+Instrumentations for specific web frameworks that consider HTTP methods to be case insensitive, SHOULD populate a canonical equivalent.
+Tracing instrumentations that do so, MUST also set `http.request.method_original` to the original value.
+
+**[7] `http.route`:** The matched route template for the request. This MUST be low-cardinality and include all static path segments, with dynamic path segments represented with placeholders.
+
+**[8] `jsonrpc.request.id`:** When the A2A JSON-RPC binding is used and the request has an id.
+
+**[9] `jsonrpc.request.id`:** Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
 Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
 
-**[8] `rpc.response.status_code`:** If the A2A JSON-RPC response contains an error code.
+**[10] `rpc.method`:** The fully-qualified logical name of the method from the RPC interface perspective.
 
-**[9] `rpc.response.status_code`:** Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
+**[11] `rpc.response.status_code`:** When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+
+**[12] `rpc.response.status_code`:** Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
 Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
 
-**[10] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+**[13] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
 
-**[11] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[14] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[12] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
+**[15] `gen_ai.agent.id`:** When the unique identifier of the target GenAI agent is known.
 
-**[13] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
+**[16] `gen_ai.agent.name`:** When the human-readable name of the target GenAI agent is known and low-cardinality.
 
-**[14] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
+**[17] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
 
-**[15] `network.transport`:** The value SHOULD be normalized to lowercase.
+**[18] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+
+**[19] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
+
+**[20] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
+
+**[21] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
+
+**[22] `network.transport`:** The value SHOULD be normalized to lowercase.
 
 Consider always setting the transport when setting a port number, since
 a port number is ambiguous without knowing the transport. For example
 different processes could be listening on TCP port 12345 and UDP port 12345.
 
-**[16] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+**[23] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
 
-**[17] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[24] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[18] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[25] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -148,6 +191,16 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 | `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+
+---
+
+`a2a.protocol.binding` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value | Description | Stability |
+| --- | --- | --- |
+| `GRPC` | gRPC transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `HTTP+JSON` | HTTP+JSON/REST transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `JSONRPC` | JSON-RPC 2.0 transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
@@ -196,6 +249,24 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 | `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
 | `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
 | `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
+
+---
+
+`http.request.method` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value | Description | Stability |
+| --- | --- | --- |
+| `_OTHER` | Any HTTP method that the instrumentation has no prior knowledge of. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `CONNECT` | CONNECT method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `DELETE` | DELETE method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `GET` | GET method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `HEAD` | HEAD method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `OPTIONS` | OPTIONS method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `PATCH` | PATCH method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `POST` | POST method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `PUT` | PUT method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `QUERY` | QUERY method. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TRACE` | TRACE method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
 
 ---
 
@@ -239,7 +310,14 @@ This span is reported by the A2A server when it processes an A2A
 request. It covers the time to produce the response for non-streaming
 calls and the time to produce the response stream for streaming calls.
 
-**Span name** SHOULD be `{a2a.method.name}`.
+**Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+SHOULD match the local `gen_ai.agent.name` if it is known and
+low-cardinality. If the local agent name is high-cardinality or not
+available, the span name MUST fall back to `{a2a.method.name}`.
+
+**Span status** SHOULD be set to `ERROR` if the request didn't complete
+successfully. The status description SHOULD match the protocol error
+message.
 
 A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
 when the A2A method invokes an agent. In that case, instrumentation
@@ -250,30 +328,40 @@ the logical A2A request and task lifecycle.
 
 **Span kind** SHOULD be `SERVER`.
 
-**Span status** SHOULD follow the [Recording Errors](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/general/recording-errors.md) document.
-
 **Attributes:**
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
 | [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
 | [`a2a.context.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The A2A context identifier used to correlate related messages and tasks. | `ctx-7b8f0f5f0d6a4f65` |
+| [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [3] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
 | [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [5] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. | |
-| [`jsonrpc.request.id`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [6] | string | A string representation of the `id` property of the request and its corresponding response. [7] | `10`; `request-7` |
-| [`rpc.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` [8] | string | The error code from the JSON-RPC response. [9] | `OK`; `DEADLINE_EXCEEDED`; `-32602` |
+| [`http.request.method`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | string | HTTP request method. [6] | `GET`; `POST`; `DELETE` |
+| [`http.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | int | [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6). | `200`; `400` |
+| [`http.route`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/http.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` When the A2A HTTP+JSON binding is used. | string | The matched route template for the request. This MUST be low-cardinality and include all static path segments, with dynamic path segments represented with placeholders. [7] | `/message:send`; `/tasks/{taskId}` |
+| [`jsonrpc.request.id`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | A string representation of the `id` property of the request and its corresponding response. [9] | `10`; `request-7` |
+| [`rpc.method`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` When the A2A gRPC binding is used. | string | The fully-qualified logical name of the method from the RPC interface perspective. [10] | `SendMessage`; `SendStreamingMessage` |
+| [`rpc.response.status_code`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Conditionally Required` [11] | string | The error code from the JSON-RPC or gRPC response. [12] | `OK`; `DEADLINE_EXCEEDED`; `-32602` |
+| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [13] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
+| [`a2a.protocol.activated_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [14] | string[] | Protocol extensions successfully activated by the server for this request. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
+| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [15] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
+| [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [10] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [11] | `65123` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [12] | string | The name of the GenAI operation being performed. [13] | `invoke_agent` |
-| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [14] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [15] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [16] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [17] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [18] | `jsonrpc` |
+| [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | Artifact IDs associated with the A2A task. | `["art-001", "art-002"]` |
+| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [16] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [17] | `65123` |
+| [`gen_ai.agent.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [18] | string | The unique identifier of the GenAI agent. | `asst_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.agent.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [19] | string | Human-readable name of the GenAI agent provided by the application. | `Math Tutor`; `Fiction Writer` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [20] | string | The name of the GenAI operation being performed. [21] | `invoke_agent` |
+| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [22] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
+| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [23] | `http`; `grpc` |
+| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [24] | `1.1`; `2` |
+| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [25] | `tcp`; `quic` |
+| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [26] | `jsonrpc` |
 
 **[1] `a2a.context.id`:** When the A2A request or response contains context id.
 
@@ -286,37 +374,74 @@ JSON-RPC error code when a JSON-RPC error is returned.
 
 **[5] `gen_ai.conversation.id`:** When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
 
-**[6] `jsonrpc.request.id`:** When the A2A JSON-RPC binding is used and the request has an id.
+**[6] `http.request.method`:** HTTP request method value SHOULD be "known" to the instrumentation.
+By default, this convention defines "known" methods as the ones listed in [RFC9110](https://www.rfc-editor.org/rfc/rfc9110.html#name-methods),
+the PATCH method defined in [RFC5789](https://www.rfc-editor.org/rfc/rfc5789.html)
+and the QUERY method defined in [httpbis-safe-method-w-body](https://datatracker.ietf.org/doc/draft-ietf-httpbis-safe-method-w-body/?include_text=1).
 
-**[7] `jsonrpc.request.id`:** Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
+If the HTTP request method is not known to instrumentation, it MUST set the `http.request.method` attribute to `_OTHER`.
+
+If the HTTP instrumentation could end up converting valid HTTP request methods to `_OTHER`, then it MUST provide a way to override
+the list of known HTTP methods. If this override is done via environment variable, then the environment variable MUST be named
+OTEL_INSTRUMENTATION_HTTP_KNOWN_METHODS and support a comma-separated list of case-sensitive known HTTP methods.
+
+![Development](https://img.shields.io/badge/-development-blue)
+If this override is done via declarative configuration, then the list MUST be configurable via the `known_methods` property
+(an array of case-sensitive strings with minimum items 0) under `.instrumentation/development.general.http.client` and/or
+`.instrumentation/development.general.http.server`.
+
+In either case, this list MUST be a full override of the default known methods,
+it is not a list of known methods in addition to the defaults.
+
+HTTP method names are case-sensitive and `http.request.method` attribute value MUST match a known HTTP method name exactly.
+Instrumentations for specific web frameworks that consider HTTP methods to be case insensitive, SHOULD populate a canonical equivalent.
+Tracing instrumentations that do so, MUST also set `http.request.method_original` to the original value.
+
+**[7] `http.route`:** The matched route template for the request. This MUST be low-cardinality and include all static path segments, with dynamic path segments represented with placeholders.
+
+**[8] `jsonrpc.request.id`:** When the A2A JSON-RPC binding is used and the request has an id.
+
+**[9] `jsonrpc.request.id`:** Under the [JSON-RPC specification](https://www.jsonrpc.org/specification), the `id` property may be a string, number, null, or omitted entirely. When omitted, the request is treated as a notification. Using `null` is not equivalent to omitting the `id`, but it is discouraged.
 Instrumentations SHOULD NOT capture this attribute when the `id` is `null` or omitted.
 
-**[8] `rpc.response.status_code`:** If the A2A JSON-RPC response contains an error code.
+**[10] `rpc.method`:** The fully-qualified logical name of the method from the RPC interface perspective.
 
-**[9] `rpc.response.status_code`:** Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
+**[11] `rpc.response.status_code`:** When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+
+**[12] `rpc.response.status_code`:** Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
 Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
 
-**[10] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
+**[13] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
 
-**[11] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
+**[14] `a2a.protocol.activated_extensions`:** When the server activates protocol extensions for the request.
 
-**[12] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+**[15] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[13] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[16] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
 
-**[14] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
+**[17] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
 
-**[15] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
+**[18] `gen_ai.agent.id`:** When the unique identifier of the target GenAI agent is known.
 
-**[16] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
+**[19] `gen_ai.agent.name`:** When the human-readable name of the target GenAI agent is known and low-cardinality.
 
-**[17] `network.transport`:** The value SHOULD be normalized to lowercase.
+**[20] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+
+**[21] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+
+**[22] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
+
+**[23] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
+
+**[24] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
+
+**[25] `network.transport`:** The value SHOULD be normalized to lowercase.
 
 Consider always setting the transport when setting a port number, since
 a port number is ambiguous without knowing the transport. For example
 different processes could be listening on TCP port 12345 and UDP port 12345.
 
-**[18] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+**[26] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
 
 ---
 
@@ -335,6 +460,16 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 | `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
 | `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+
+---
+
+`a2a.protocol.binding` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value | Description | Stability |
+| --- | --- | --- |
+| `GRPC` | gRPC transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `HTTP+JSON` | HTTP+JSON/REST transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `JSONRPC` | JSON-RPC 2.0 transport binding. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
@@ -386,173 +521,21 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 
 ---
 
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+`http.request.method` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-## Metrics
-
-### Metric: `a2a.client.operation.duration`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.client.operation.duration") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.client.operation.duration` | Histogram | `s` | Duration of an A2A request as observed by the client. | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [10] | `80`; `8080`; `443` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
-**[9] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[10] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
+| `_OTHER` | Any HTTP method that the instrumentation has no prior knowledge of. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `CONNECT` | CONNECT method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `DELETE` | DELETE method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `GET` | GET method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `HEAD` | HEAD method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `OPTIONS` | OPTIONS method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `PATCH` | PATCH method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `POST` | POST method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `PUT` | PUT method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
+| `QUERY` | QUERY method. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TRACE` | TRACE method. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
 
 ---
 
@@ -581,1172 +564,20 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 <!-- END AUTOGENERATED TEXT -->
 <!-- endweaver -->
 
-### Metric: `a2a.server.operation.duration`
+## Relationship to HTTP, JSON-RPC, and gRPC
 
-<!-- weaver .registry.metrics[] | select(.name == "a2a.server.operation.duration") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
+When A2A runs over HTTP, HTTP spans describe the transport request.
+A2A spans describe the logical A2A operation.
 
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.server.operation.duration` | Histogram | `s` | Duration of an A2A request as observed by the server. | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.client.response.time_to_first_event`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.client.response.time_to_first_event") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.client.response.time_to_first_event` | Histogram | `s` | Time to receive the first A2A streaming response event, measured from when the client issues the A2A request. [1] | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**[1]:** This metric SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [10] | `80`; `8080`; `443` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
-**[9] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[10] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.server.response.time_to_first_event`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.server.response.time_to_first_event") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.server.response.time_to_first_event` | Histogram | `s` | Time to send the first A2A streaming response event, measured from when the server receives the A2A request. [1] | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**[1]:** This metric SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.client.response.sse.event.count`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.client.response.sse.event.count") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.client.response.sse.event.count` | Histogram | `{event}` | Number of SSE events received in an A2A streaming response. [1] | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**[1]:** This metric SHOULD be reported for A2A SSE streaming responses and SHOULD NOT be reported otherwise.
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [10] | `80`; `8080`; `443` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
-**[9] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[10] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.server.response.sse.event.count`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.server.response.sse.event.count") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.server.response.sse.event.count` | Histogram | `{event}` | Number of SSE events sent in an A2A streaming response. [1] | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**[1]:** This metric SHOULD be reported for A2A SSE streaming responses and SHOULD NOT be reported otherwise.
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.client.response.body.size`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.client.response.body.size") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.client.response.body.size` | Histogram | `By` | Size of the A2A response body received by the client. | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [10] | `80`; `8080`; `443` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
-**[9] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[10] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-### Metric: `a2a.server.response.body.size`
-
-<!-- weaver .registry.metrics[] | select(.name == "a2a.server.response.body.size") -->
-<!-- NOTE: THIS TEXT IS AUTOGENERATED. DO NOT EDIT BY HAND. -->
-<!-- see templates/registry/markdown/snippet.md.j2 -->
-<!-- prettier-ignore-start -->
-
-| Name | Instrument Type | Unit (UCUM) | Description | Stability | Entity Associations |
-| -------- | --------------- | ----------- | -------------- | --------- | ------ |
-| `a2a.server.response.body.size` | Histogram | `By` | Size of the A2A response body sent by the server. | ![Development](https://img.shields.io/badge/-development-blue) | |
-
-**Attributes:**
-
-| Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
-| --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [1] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [3] | string | The name of the operation being performed. [4] | `chat`; `generate_content`; `text_completion` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [5] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [6] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [7] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [8] | `jsonrpc` |
-
-**[1] `error.type`:** The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
-
-When `error.type` is set to a type (e.g., an exception type), its
-canonical class name identifying the type within the artifact SHOULD be used.
-
-If the recorded error type is a wrapper that is not meaningful for
-failure classification, instrumentation MAY use the type of the inner
-error instead. For example, in Go, errors created with `fmt.Errorf`
-using `%w` MAY be unwrapped when the wrapper type does not help
-classify the failure.
-
-Instrumentations SHOULD document the list of errors they report.
-
-The cardinality of `error.type` within one instrumentation library SHOULD be low.
-Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
-should be prepared for `error.type` to have high cardinality at query time when no
-additional filters are applied.
-
-If the operation has completed successfully, instrumentations SHOULD NOT set `error.type`.
-
-If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
-it's RECOMMENDED to:
-
-- Use a domain-specific attribute
-- Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-
-**[2] `a2a.task.state`:** When the A2A response or event contains task state.
-
-**[3] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
-
-**[4] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
-
-**[5] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[6] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[7] `network.transport`:** The value SHOULD be normalized to lowercase.
-
-Consider always setting the transport when setting a port number, since
-a port number is ambiguous without knowing the transport. For example
-different processes could be listening on TCP port 12345 and UDP port 12345.
-
-**[8] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
-
----
-
-`a2a.method.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `agent/getAuthenticatedExtendedCard` | Request to get the authenticated extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/pushNotificationConfig/set` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/resubscribe` | Request to resume a streaming subscription for task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`a2a.task.state` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unknown` | The task state is unknown. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`error.type` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `_OTHER` | A fallback error value to be used when the instrumentation doesn't define a custom value. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`gen_ai.operation.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `chat` | Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_agent` | Create GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory` | Create new memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `create_memory_store` | Create or initialize a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory` | Delete memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `delete_memory_store` | Delete or deprovision a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `embeddings` | Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `execute_tool` | Execute a tool | ![Development](https://img.shields.io/badge/-development-blue) |
-| `generate_content` | Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_agent` | Invoke GenAI agent | ![Development](https://img.shields.io/badge/-development-blue) |
-| `invoke_workflow` | Invoke GenAI workflow | ![Development](https://img.shields.io/badge/-development-blue) |
-| `plan` | Agent planning or task decomposition phase | ![Development](https://img.shields.io/badge/-development-blue) |
-| `retrieval` | Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `search_memory` | Search/query memories from a memory store | ![Development](https://img.shields.io/badge/-development-blue) |
-| `text_completion` | Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `update_memory` | Update existing memory records | ![Development](https://img.shields.io/badge/-development-blue) |
-| `upsert_memory` | Create or update memory records without the caller choosing which | ![Development](https://img.shields.io/badge/-development-blue) |
-
----
-
-`network.transport` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `pipe` | Named or anonymous pipe. | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `quic` | QUIC | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `tcp` | TCP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `udp` | UDP | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-| `unix` | Unix domain socket | ![Stable](https://img.shields.io/badge/-stable-lightgreen) |
-
----
-
-`rpc.system.name` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
-
-| Value | Description | Stability |
-| --- | --- | --- |
-| `connectrpc` | [Connect RPC](https://connectrpc.com/) | ![Development](https://img.shields.io/badge/-development-blue) |
-| `dubbo` | [Apache Dubbo](https://dubbo.apache.org/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `grpc` | [gRPC](https://grpc.io/) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) |
-| `jsonrpc` | [JSON-RPC](https://www.jsonrpc.org/) | ![Development](https://img.shields.io/badge/-development-blue) |
-
-<!-- prettier-ignore-end -->
-<!-- END AUTOGENERATED TEXT -->
-<!-- endweaver -->
-
-## Relationship to HTTP and JSON-RPC
-
-When A2A runs over HTTP, HTTP spans and metrics describe the transport request.
-A2A spans and metrics describe the logical A2A operation.
+The transport binding in use SHOULD be recorded in `a2a.protocol.binding`
+(`JSONRPC`, `GRPC`, or `HTTP+JSON`).
 
 When the A2A JSON-RPC binding is used, `rpc.system.name` SHOULD be set to
 `jsonrpc`. For non-RPC bindings, `rpc.system.name` SHOULD NOT be set.
+
+When the A2A gRPC binding is used, `rpc.method` and `rpc.response.status_code`
+SHOULD be populated. When the A2A HTTP+JSON binding is used,
+`http.request.method`, `http.response.status_code`, and `http.route` SHOULD be
+populated.
 
 [DocumentStatus]: https://opentelemetry.io/docs/specs/otel/document-status

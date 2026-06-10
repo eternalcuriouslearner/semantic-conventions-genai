@@ -4,14 +4,24 @@ spans:
     kind: client
     name:
       note: |
-        **Span name** SHOULD be `{a2a.method.name}`.
+        **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+        SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
+        low-cardinality target is not available, the span name MUST fall back
+        to `{a2a.method.name}`.
     brief: This span describes an A2A call from the client side.
     note: |
       This span is reported by the A2A client when it initiates an A2A
       request. It covers the time to receive the response for non-streaming
       calls and the time to consume the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+      SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
+      low-cardinality target is not available, the span name MUST fall back
+      to `{a2a.method.name}`.
+
+      **Span status** SHOULD be set to `ERROR` if the request didn't complete
+      successfully. The status description SHOULD match the protocol error
+      message.
 
       A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
       when the A2A method invokes an agent. In that case, instrumentation
@@ -23,19 +33,32 @@ spans:
     attributes:
       - ref_group: a2a.common.attributes
       - ref_group: a2a.client.address_and_port.attributes
+      - ref: a2a.agent.card.url
+        requirement_level:
+          recommended: When the target agent's Agent Card URL is known.
 
   - type: a2a.server
     kind: server
     name:
       note: |
-        **Span name** SHOULD be `{a2a.method.name}`.
+        **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+        SHOULD match the local `gen_ai.agent.name` if it is known and
+        low-cardinality. If the local agent name is high-cardinality or not
+        available, the span name MUST fall back to `{a2a.method.name}`.
     brief: This span describes processing of an A2A request by the server.
     note: |
       This span is reported by the A2A server when it processes an A2A
       request. It covers the time to produce the response for non-streaming
       calls and the time to produce the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
+      SHOULD match the local `gen_ai.agent.name` if it is known and
+      low-cardinality. If the local agent name is high-cardinality or not
+      available, the span name MUST fall back to `{a2a.method.name}`.
+
+      **Span status** SHOULD be set to `ERROR` if the request didn't complete
+      successfully. The status description SHOULD match the protocol error
+      message.
 
       A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
       when the A2A method invokes an agent. In that case, instrumentation
@@ -47,3 +70,6 @@ spans:
     attributes:
       - ref_group: a2a.common.attributes
       - ref_group: a2a.server.address_and_port.attributes
+      - ref: a2a.protocol.activated_extensions
+        requirement_level:
+          recommended: When the server activates protocol extensions for the request.
