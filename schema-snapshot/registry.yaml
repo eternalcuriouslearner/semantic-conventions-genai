@@ -14,7 +14,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -28,8 +28,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -37,13 +37,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -233,7 +237,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -256,15 +260,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -357,7 +360,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -405,7 +408,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -435,16 +438,19 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -494,7 +500,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -621,6 +627,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -630,6 +641,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -644,7 +660,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -742,7 +758,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -784,7 +800,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: The evaluation score returned by the evaluator.
@@ -794,7 +810,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: double
     - brief: The unique identifier for the completion.
@@ -808,7 +824,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when available
+        recommended: When available.
       stability: development
       type: string
     brief: |
@@ -836,7 +852,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -926,15 +942,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -946,7 +961,8 @@ refinements:
         `openai.*` attributes.
       provenance:
         path: ./model/gen-ai/registry.yaml
-      requirement_level: required
+      requirement_level:
+        conditionally_required: If the operation involves a call to a GenAI provider.
       stability: development
       type:
         members:
@@ -1156,15 +1172,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -1389,15 +1404,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -1621,15 +1635,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -1802,7 +1815,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -1892,15 +1905,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -2122,15 +2134,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -2352,15 +2363,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -2514,7 +2524,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -2690,7 +2700,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The name of the request or notification method.
@@ -2921,7 +2931,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -2933,7 +2943,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: |
@@ -2997,7 +3007,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The [version](https://modelcontextprotocol.io/specification/versioning) of the Model Context Protocol used.
@@ -3070,7 +3080,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -3082,7 +3092,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: The duration of the MCP session as observed on the MCP client.
@@ -3231,7 +3241,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The name of the request or notification method.
@@ -3514,7 +3524,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The [version](https://modelcontextprotocol.io/specification/versioning) of the Model Context Protocol used.
@@ -3603,7 +3613,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -3693,15 +3703,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -3713,7 +3722,8 @@ refinements:
         `openai.*` attributes.
       provenance:
         path: ./model/gen-ai/registry.yaml
-      requirement_level: required
+      requirement_level:
+        conditionally_required: If the operation involves a call to a GenAI provider.
       stability: development
       type:
         members:
@@ -3943,15 +3953,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -4372,10 +4381,15 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
@@ -5046,10 +5060,15 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
@@ -5444,7 +5463,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -5458,8 +5477,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -5467,13 +5486,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -5664,7 +5687,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -5687,15 +5710,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -5789,7 +5811,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -5838,7 +5860,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -5868,15 +5890,18 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -5926,7 +5951,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -6059,6 +6084,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -6073,7 +6103,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -6149,7 +6179,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -6163,8 +6193,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -6172,13 +6202,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -6369,7 +6403,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -6392,15 +6426,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -6494,7 +6527,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -6543,7 +6576,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -6573,15 +6606,18 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -6631,7 +6667,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -6758,6 +6794,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -6767,6 +6808,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -6781,7 +6827,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -6845,7 +6891,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -6859,8 +6905,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -6868,13 +6914,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -7075,7 +7125,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -7098,15 +7148,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -7200,7 +7249,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -7249,7 +7298,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -7279,16 +7328,19 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -7338,7 +7390,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -7466,6 +7518,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -7476,6 +7533,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -7490,7 +7552,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -7544,7 +7606,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -7553,7 +7615,7 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the GenAI agent created during this operation.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -7564,17 +7626,22 @@ refinements:
         conditionally_required: If provided by the application.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The stable unique identifier of the GenAI agent created during this operation.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the GenAI agent created during this operation.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -7586,7 +7653,7 @@ refinements:
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the GenAI agent created during this operation.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -7679,15 +7746,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -7866,7 +7932,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -7967,15 +8033,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -8105,6 +8170,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -8162,7 +8232,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -8277,7 +8347,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     - brief: The result returned by the tool call (if any and if execution was successful).
@@ -8310,7 +8380,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     - brief: Name of the tool utilized by the agent.
@@ -8337,7 +8407,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     brief: Describes tool execution span.
@@ -8377,7 +8447,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -8391,8 +8461,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -8400,13 +8470,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -8597,7 +8671,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -8620,15 +8694,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -8722,7 +8795,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -8771,7 +8844,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -8801,16 +8874,19 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -8860,7 +8936,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -8987,6 +9063,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -8996,6 +9077,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -9010,7 +9096,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -9071,7 +9157,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -9080,7 +9166,7 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the invoked GenAI agent.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -9088,20 +9174,25 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The stable unique identifier of the invoked GenAI agent.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the invoked GenAI agent.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -9109,11 +9200,11 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the invoked GenAI agent.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -9121,7 +9212,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -9129,8 +9220,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -9138,13 +9229,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The data source identifier.
@@ -9156,7 +9251,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: |
@@ -9347,7 +9442,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -9370,15 +9465,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -9472,7 +9566,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -9521,7 +9615,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -9687,6 +9781,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -9696,6 +9795,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -9758,7 +9862,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -9767,7 +9871,7 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the invoked GenAI agent.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -9775,20 +9879,10 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      key: gen_ai.agent.id
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        conditionally_required: if applicable.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the invoked GenAI agent.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -9796,11 +9890,11 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the invoked GenAI agent.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -9808,7 +9902,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -9816,8 +9910,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -9825,13 +9919,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The data source identifier.
@@ -9843,7 +9941,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: |
@@ -10034,7 +10132,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -10057,15 +10155,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -10159,7 +10256,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -10208,7 +10305,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -10374,6 +10471,11 @@ refinements:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -10383,6 +10485,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -10420,7 +10527,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -10624,7 +10731,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     brief: |
@@ -10663,7 +10770,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -10697,7 +10804,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the operation involves memory records and the count is available
+        recommended: If the operation involves memory records and the count is available.
       stability: development
       type: int
     - brief: The unique identifier of the memory record.
@@ -10707,7 +10814,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when the operation applies to a specific memory record
+        conditionally_required: When the operation applies to a specific memory record.
       stability: development
       type: string
     - brief: The memory records stored or retrieved in a memory operation.
@@ -10756,7 +10863,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -10840,15 +10947,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -10861,7 +10967,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if the operation is handled by a named external GenAI provider or service
+        conditionally_required: If the operation is handled by a named external GenAI provider or service.
       stability: development
       type:
         members:
@@ -11004,7 +11110,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -11013,17 +11119,7 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      key: gen_ai.agent.id
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        conditionally_required: if applicable.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the agent performing the planning.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -11031,7 +11127,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -11153,7 +11249,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -11171,7 +11267,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable
+        conditionally_required: When applicable.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -11255,15 +11351,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -11276,7 +11371,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable
+        conditionally_required: When applicable.
       stability: development
       type:
         members:
@@ -11361,15 +11456,6 @@ refinements:
         conditionally_required: If available.
       stability: development
       type: string
-    - brief: The top_k sampling setting for the GenAI request.
-      examples:
-      - 1.0
-      key: gen_ai.request.top_k
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level: recommended
-      stability: development
-      type: double
     - brief: The documents retrieved.
       examples:
       - |
@@ -11414,6 +11500,16 @@ refinements:
       requirement_level: opt_in
       stability: development
       type: string
+    - brief: |
+        The maximum number of documents the retriever was asked to return for the query (also known as `k`, `limit`, or `max_num_results`).
+      examples:
+      - 5
+      key: gen_ai.retrieval.top_k
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: recommended
+      stability: development
+      type: int
     - brief: GenAI server address.
       examples:
       - example.com
@@ -11633,7 +11729,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: |
@@ -11888,7 +11984,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -11900,7 +11996,7 @@ refinements:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: This span describes the MCP call from the client side.
@@ -11950,7 +12046,7 @@ refinements:
       note: |
         When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Client port number.
@@ -11960,7 +12056,7 @@ refinements:
       note: |
         When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `client.address` is set
+        recommended: When `client.address` is set.
       stability: stable
       type: int
     - brief: |
@@ -12143,7 +12239,7 @@ refinements:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: |
@@ -12430,7 +12526,7 @@ refinements:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -12444,8 +12540,8 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -12453,13 +12549,17 @@ refinements:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -12660,7 +12760,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -12683,15 +12783,14 @@ refinements:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -12785,7 +12884,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -12833,7 +12932,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -12863,16 +12962,19 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -12922,7 +13024,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -13055,6 +13157,11 @@ refinements:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -13069,7 +13176,7 @@ refinements:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: The type of OpenAI API being used.
@@ -13096,7 +13203,7 @@ refinements:
       provenance:
         path: ./model/openai/registry.yaml
       requirement_level:
-        conditionally_required: if the request includes a service_tier and the value is not \u0027auto\u0027
+        conditionally_required: If the request includes a service_tier and the value is not \u0027auto\u0027.
       stability: development
       type:
         members:
@@ -13116,7 +13223,7 @@ refinements:
       provenance:
         path: ./model/openai/registry.yaml
       requirement_level:
-        conditionally_required: if the response was received and includes a service_tier
+        conditionally_required: If the response was received and includes a service_tier.
       stability: development
       type: string
     - brief: A fingerprint to track any eventual change in the Generative AI environment.
@@ -13408,10 +13515,15 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: string
-  - brief: The unique identifier of the GenAI agent.
+  - brief: The unique and stable identifier of the GenAI hosted agent resource.
     examples:
     - asst_5j66UpCpwteGg4YSxUnt7lPY
+    - arn:aws:bedrock:us-east-1:123:agent/42
+    - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
     key: gen_ai.agent.id
+    note: |
+      For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+      It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
     provenance:
       path: ./model/gen-ai/registry.yaml
     stability: development
@@ -13793,15 +13905,14 @@ registry:
   - brief: The Generative AI provider as identified by the client or server instrumentation.
     key: gen_ai.provider.name
     note: |
-      The attribute SHOULD be set based on the instrumentation\u0027s best
-      knowledge and may differ from the actual model provider.
+      Semantic conventions for individual GenAI operations SHOULD clarify which
+      kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+      agent providers) apply when it is not clear from context.
 
-      Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-      are accessible using the OpenAI REST API and corresponding client libraries,
-      but may proxy or host models from different providers.
-
-      The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-      attributes may help identify the actual system in use.
+      The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+      and may differ from the actual upstream provider. For example, a client SDK
+      may be configured against a proxy or hosting platform that transparently
+      relays requests to a different provider.
 
       The `gen_ai.provider.name` attribute acts as a discriminator that
       identifies the GenAI telemetry format flavor specific to that provider
@@ -13968,14 +14079,17 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: double
-  - brief: The top_k sampling setting for the GenAI request.
+  - brief: |
+      The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
     examples:
-    - 1.0
+    - 40
     key: gen_ai.request.top_k
+    note: |
+      This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
     provenance:
       path: ./model/gen-ai/registry.yaml
     stability: development
-    type: double
+    type: int
   - brief: The top_p sampling setting for the GenAI request.
     examples:
     - 1.0
@@ -14062,6 +14176,15 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: string
+  - brief: |
+      The maximum number of documents the retriever was asked to return for the query (also known as `k`, `limit`, or `max_num_results`).
+    examples:
+    - 5
+    key: gen_ai.retrieval.top_k
+    provenance:
+      path: ./model/gen-ai/registry.yaml
+    stability: development
+    type: int
   - brief: The system message or instructions provided to the GenAI model separately from the chat history.
     examples:
     - |
@@ -14281,6 +14404,11 @@ registry:
       Instrumentations SHOULD make a best effort to populate this value, using a total
       provided by the provider when available or, depending on the provider API,
       by summing different token types parsed from the provider output.
+
+      When the provider reports both billed token counts and model-consumed
+      token counts (for example, Cohere exposes both `usage.billed_units` and
+      `usage.tokens`), instrumentations SHOULD report the billed count so the
+      value matches the units the customer is charged for.
     provenance:
       path: ./model/gen-ai/registry.yaml
     stability: development
@@ -14289,6 +14417,11 @@ registry:
     examples:
     - 180
     key: gen_ai.usage.output_tokens
+    note: |
+      When the provider reports both billed token counts and model-consumed
+      token counts (for example, Cohere exposes both `usage.billed_units` and
+      `usage.tokens`), instrumentations SHOULD report the billed count so the
+      value matches the units the customer is charged for.
     provenance:
       path: ./model/gen-ai/registry.yaml
     stability: development
@@ -14545,7 +14678,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -14559,8 +14692,8 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -14568,13 +14701,17 @@ registry:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -14764,7 +14901,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -14787,15 +14924,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -14888,7 +15024,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -14936,7 +15072,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -14966,16 +15102,19 @@ registry:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -15025,7 +15164,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -15152,6 +15291,11 @@ registry:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -15161,6 +15305,11 @@ registry:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -15175,7 +15324,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -15271,7 +15420,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -15313,7 +15462,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: The evaluation score returned by the evaluator.
@@ -15323,7 +15472,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: double
     - brief: The unique identifier for the completion.
@@ -15337,7 +15486,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when available
+        recommended: When available.
       stability: development
       type: string
     brief: |
@@ -15364,7 +15513,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -15454,15 +15603,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -15474,7 +15622,8 @@ registry:
         `openai.*` attributes.
       provenance:
         path: ./model/gen-ai/registry.yaml
-      requirement_level: required
+      requirement_level:
+        conditionally_required: If the operation involves a call to a GenAI provider.
       stability: development
       type:
         members:
@@ -15683,15 +15832,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -15915,15 +16063,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -16146,15 +16293,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -16326,7 +16472,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -16416,15 +16562,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -16645,15 +16790,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -16874,15 +17018,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -17035,7 +17178,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -17210,7 +17353,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The name of the request or notification method.
@@ -17441,7 +17584,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -17453,7 +17596,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: |
@@ -17516,7 +17659,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The [version](https://modelcontextprotocol.io/specification/versioning) of the Model Context Protocol used.
@@ -17589,7 +17732,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -17601,7 +17744,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: The duration of the MCP session as observed on the MCP client.
@@ -17749,7 +17892,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The name of the request or notification method.
@@ -18031,7 +18174,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: The [version](https://modelcontextprotocol.io/specification/versioning) of the Model Context Protocol used.
@@ -18347,10 +18490,15 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
@@ -19020,10 +19168,15 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
@@ -19417,7 +19570,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -19426,7 +19579,7 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the GenAI agent created during this operation.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -19437,17 +19590,22 @@ registry:
         conditionally_required: If provided by the application.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The stable unique identifier of the GenAI agent created during this operation.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the GenAI agent created during this operation.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -19459,7 +19617,7 @@ registry:
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the GenAI agent created during this operation.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -19552,15 +19710,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -19738,7 +19895,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -19839,15 +19996,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -19977,6 +20133,11 @@ registry:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -20033,7 +20194,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -20148,7 +20309,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     - brief: The result returned by the tool call (if any and if execution was successful).
@@ -20181,7 +20342,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     - brief: Name of the tool utilized by the agent.
@@ -20208,7 +20369,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if available
+        recommended: If available.
       stability: development
       type: string
     brief: Describes tool execution span.
@@ -20247,7 +20408,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -20261,8 +20422,8 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -20270,13 +20431,17 @@ registry:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: |
@@ -20467,7 +20632,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -20490,15 +20655,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -20592,7 +20756,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -20641,7 +20805,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -20671,16 +20835,19 @@ registry:
       requirement_level: recommended
       stability: development
       type: double
-    - brief: The top_k sampling setting for the GenAI request.
+    - brief: |
+        The top-K sampling setting for the GenAI request: restricts token generation at each step to the K most likely next tokens.
       examples:
-      - 1.0
+      - 40
       key: gen_ai.request.top_k
+      note: |
+        This is a decoding/sampling parameter (e.g., Anthropic `top_k`, Cohere `k`, Google `topK`), not an output-shaping parameter. In particular, OpenAI\u0027s `top_logprobs` controls how many per-token log-probabilities are returned in the response and does not change generation; it MUST NOT be reported as `gen_ai.request.top_k`.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
-      type: double
+      type: int
     - brief: The top_p sampling setting for the GenAI request.
       examples:
       - 1.0
@@ -20730,7 +20897,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the request was a streaming request
+        recommended: If the request was a streaming request.
       stability: development
       type: double
     - brief: The system message or instructions provided to the GenAI model separately from the chat history.
@@ -20857,6 +21024,11 @@ registry:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -20866,6 +21038,11 @@ registry:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -20880,7 +21057,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: when applicable
+        recommended: When applicable.
       stability: development
       type: int
     - brief: GenAI server address.
@@ -20940,7 +21117,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -20949,7 +21126,7 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the invoked GenAI agent.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -20957,20 +21134,25 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
+    - brief: The stable unique identifier of the invoked GenAI agent.
       examples:
       - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
       key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the invoked GenAI agent.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -20978,11 +21160,11 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the invoked GenAI agent.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -20990,7 +21172,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -20998,8 +21180,8 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -21007,13 +21189,17 @@ registry:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The data source identifier.
@@ -21025,7 +21211,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: |
@@ -21216,7 +21402,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -21239,15 +21425,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -21341,7 +21526,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -21390,7 +21575,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -21556,6 +21741,11 @@ registry:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -21565,6 +21755,11 @@ registry:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -21626,7 +21821,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -21635,7 +21830,7 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: Free-form description of the GenAI agent provided by the application.
+    - brief: The free-form description of the invoked GenAI agent.
       examples:
       - Helps with math problems
       - Generates fiction stories
@@ -21643,20 +21838,10 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
-    - brief: The unique identifier of the GenAI agent.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      key: gen_ai.agent.id
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        conditionally_required: if applicable.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the invoked GenAI agent.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -21664,11 +21849,11 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       sampling_relevant: true
       stability: development
       type: string
-    - brief: The version of the GenAI agent.
+    - brief: The version of the invoked GenAI agent.
       examples:
       - 1.0.0
       - 2025-05-01
@@ -21676,7 +21861,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
@@ -21684,8 +21869,8 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        Instrumentations SHOULD populate conversation id when they have it readily available
-        for a given operation, for example:
+        Instrumentations SHOULD populate conversation id when they have an identifier
+        for the conversation readily available for a given operation, for example:
 
         - when client framework being instrumented manages conversation history
         (see [LlamaIndex chat store](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/))
@@ -21693,13 +21878,17 @@ registry:
         (see [AWS Bedrock agent sessions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html),
         [OpenAI Assistant threads](https://platform.openai.com/docs/api-reference/threads))
 
+        When no identifier for the conversation is available, instrumentations SHOULD NOT
+        populate conversation id. For example, a new UUID, a trace identifier, or a hash
+        of request content SHOULD NOT be used as a fallback value.
+
         Application developers that manage conversation history MAY add conversation id to GenAI and other
         spans or logs using custom span or log record processors or hooks provided by instrumentation
         libraries.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The data source identifier.
@@ -21711,7 +21900,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable.
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: |
@@ -21902,7 +22091,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable and if the request includes an output format.
+        conditionally_required: When applicable and if the request includes an output format.
       stability: development
       type:
         members:
@@ -21925,15 +22114,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -22027,7 +22215,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if available, in the request, and !=1
+        conditionally_required: If available, in the request, and !=1.
       stability: development
       type: int
     - brief: The frequency penalty setting for the GenAI request.
@@ -22076,7 +22264,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable and if the request includes a seed
+        conditionally_required: If applicable and if the request includes a seed.
       stability: development
       type: int
     - brief: List of sequences that the model will use to stop generating further tokens.
@@ -22242,6 +22430,11 @@ registry:
         Instrumentations SHOULD make a best effort to populate this value, using a total
         provided by the provider when available or, depending on the provider API,
         by summing different token types parsed from the provider output.
+
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -22251,6 +22444,11 @@ registry:
       examples:
       - 180
       key: gen_ai.usage.output_tokens
+      note: |
+        When the provider reports both billed token counts and model-consumed
+        token counts (for example, Cohere exposes both `usage.billed_units` and
+        `usage.tokens`), instrumentations SHOULD report the billed count so the
+        value matches the units the customer is charged for.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level: recommended
@@ -22287,7 +22485,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -22491,7 +22689,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     brief: |
@@ -22529,7 +22727,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -22563,7 +22761,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        recommended: if the operation involves memory records and the count is available
+        recommended: If the operation involves memory records and the count is available.
       stability: development
       type: int
     - brief: The unique identifier of the memory record.
@@ -22573,7 +22771,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when the operation applies to a specific memory record
+        conditionally_required: When the operation applies to a specific memory record.
       stability: development
       type: string
     - brief: The memory records stored or retrieved in a memory operation.
@@ -22622,7 +22820,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if applicable
+        conditionally_required: If applicable.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -22706,15 +22904,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -22727,7 +22924,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: if the operation is handled by a named external GenAI provider or service
+        conditionally_required: If the operation is handled by a named external GenAI provider or service.
       stability: development
       type:
         members:
@@ -22869,7 +23066,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -22878,17 +23075,7 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique identifier of the GenAI agent.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      key: gen_ai.agent.id
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        conditionally_required: if applicable.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
+    - brief: The human-readable name of the agent performing the planning.
       examples:
       - Math Tutor
       - Fiction Writer
@@ -22896,7 +23083,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when available
+        conditionally_required: When available.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -23017,7 +23204,7 @@ registry:
         the canonical name of exception that occurred, or another low-cardinality error identifier.
         Instrumentations SHOULD document the list of errors they report.
       requirement_level:
-        conditionally_required: if the operation ended in an error
+        conditionally_required: If the operation ended in an error.
       stability: stable
       type:
         members:
@@ -23035,7 +23222,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable
+        conditionally_required: When applicable.
       stability: development
       type: string
     - brief: The name of the operation being performed.
@@ -23119,15 +23306,14 @@ registry:
     - brief: The Generative AI provider as identified by the client or server instrumentation.
       key: gen_ai.provider.name
       note: |
-        The attribute SHOULD be set based on the instrumentation\u0027s best
-        knowledge and may differ from the actual model provider.
+        Semantic conventions for individual GenAI operations SHOULD clarify which
+        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
+        agent providers) apply when it is not clear from context.
 
-        Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-        are accessible using the OpenAI REST API and corresponding client libraries,
-        but may proxy or host models from different providers.
-
-        The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-        attributes may help identify the actual system in use.
+        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
+        and may differ from the actual upstream provider. For example, a client SDK
+        may be configured against a proxy or hosting platform that transparently
+        relays requests to a different provider.
 
         The `gen_ai.provider.name` attribute acts as a discriminator that
         identifies the GenAI telemetry format flavor specific to that provider
@@ -23140,7 +23326,7 @@ registry:
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: when applicable
+        conditionally_required: When applicable.
       stability: development
       type:
         members:
@@ -23225,15 +23411,6 @@ registry:
         conditionally_required: If available.
       stability: development
       type: string
-    - brief: The top_k sampling setting for the GenAI request.
-      examples:
-      - 1.0
-      key: gen_ai.request.top_k
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level: recommended
-      stability: development
-      type: double
     - brief: The documents retrieved.
       examples:
       - |
@@ -23278,6 +23455,16 @@ registry:
       requirement_level: opt_in
       stability: development
       type: string
+    - brief: |
+        The maximum number of documents the retriever was asked to return for the query (also known as `k`, `limit`, or `max_num_results`).
+      examples:
+      - 5
+      key: gen_ai.retrieval.top_k
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: recommended
+      stability: development
+      type: int
     - brief: GenAI server address.
       examples:
       - example.com
@@ -23496,7 +23683,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: |
@@ -23751,7 +23938,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Server port number.
@@ -23763,7 +23950,7 @@ registry:
       note: |
         When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `server.address` is set
+        recommended: When `server.address` is set.
       stability: stable
       type: int
     brief: This span describes the MCP call from the client side.
@@ -23812,7 +23999,7 @@ registry:
       note: |
         When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: If applicable
+        recommended: If applicable.
       stability: stable
       type: string
     - brief: Client port number.
@@ -23822,7 +24009,7 @@ registry:
       note: |
         When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it\u0027s available.
       requirement_level:
-        recommended: When `client.address` is set
+        recommended: When `client.address` is set.
       stability: stable
       type: int
     - brief: |
@@ -24005,7 +24192,7 @@ registry:
       - \u00271.0\u0027
       key: jsonrpc.protocol.version
       requirement_level:
-        recommended: when it\u0027s not `2.0`.
+        recommended: When it\u0027s not `2.0`.
       stability: development
       type: string
     - brief: |
