@@ -18,7 +18,6 @@ from reference_shared import (
 MOCK_A2A_URL = f"{os.environ.get('MOCK_LLM_URL', 'http://127.0.0.1:8080').rstrip('/')}/a2a"
 PROTOCOL_VERSION = "1.0"
 PROTOCOL_BINDING = "JSONRPC"
-AGENT_NAME = "CalendarAgent"
 AGENT_CARD_URL = f"{MOCK_A2A_URL}/.well-known/agent-card.json"
 REQUESTED_EXTENSIONS = ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
 
@@ -62,7 +61,6 @@ def _capture_jsonrpc_request(observed_requests: dict[str, str]):
 async def _create_a2a_client(*, streaming: bool, observed_requests: dict[str, str]):
     httpx_client = httpx.AsyncClient(event_hooks={"request": [_capture_jsonrpc_request(observed_requests)]})
     card = minimal_agent_card(MOCK_A2A_URL, [TransportProtocol.JSONRPC])
-    card.name = AGENT_NAME
     card.capabilities.streaming = streaming
     return await create_client(
         card,
@@ -86,7 +84,6 @@ def _base_span_attrs(method: str):
         "a2a.protocol.version": PROTOCOL_VERSION,
         "a2a.protocol.binding": PROTOCOL_BINDING,
         "a2a.agent.card.url": AGENT_CARD_URL,
-        "gen_ai.agent.name": AGENT_NAME,
         "network.protocol.name": "http",
         "network.transport": "tcp",
         "rpc.system.name": "jsonrpc",
@@ -124,7 +121,7 @@ async def run_message_send_reference() -> None:
         "a2a.protocol.requested_extensions": REQUESTED_EXTENSIONS,
         "gen_ai.operation.name": "invoke_agent",
     }
-    with _reference_tracer.start_as_current_span(f"{method} {AGENT_NAME}", attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
             response = await anext(client.send_message(request))
         task = response.task
@@ -163,7 +160,7 @@ async def run_message_stream_reference() -> None:
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.request.stream": True,
     }
-    with _reference_tracer.start_as_current_span(f"{method} {AGENT_NAME}", attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=True, observed_requests=observed_requests) as client:
             async for event in client.send_message(request):
                 event_count += 1
@@ -187,7 +184,7 @@ async def run_tasks_get_reference() -> None:
     )
 
     span_attrs = _base_span_attrs(method)
-    with _reference_tracer.start_as_current_span(f"{method} {AGENT_NAME}", attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
             task = await client.get_task(request)
         task_state = _task_state_value(task.status.state)

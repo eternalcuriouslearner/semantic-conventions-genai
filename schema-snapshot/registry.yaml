@@ -4381,32 +4381,6 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique and stable identifier of the GenAI hosted agent resource.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      - arn:aws:bedrock:us-east-1:123:agent/42
-      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
-      key: gen_ai.agent.id
-      note: |
-        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the unique identifier of the target GenAI agent is known.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
-      examples:
-      - Math Tutor
-      - Fiction Writer
-      key: gen_ai.agent.name
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the human-readable name of the target GenAI agent is known and low-cardinality.
-      stability: development
-      type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -4775,10 +4749,7 @@ refinements:
       request. It covers the time to receive the response for non-streaming
       calls and the time to consume the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-      SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
-      low-cardinality target is not available, the span name MUST fall back
-      to `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name}`.
 
       **Span status** SHOULD be set to `ERROR` if the request didn\u0027t complete
       successfully. The status description SHOULD match the protocol error
@@ -5060,32 +5031,6 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique and stable identifier of the GenAI hosted agent resource.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      - arn:aws:bedrock:us-east-1:123:agent/42
-      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
-      key: gen_ai.agent.id
-      note: |
-        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the unique identifier of the target GenAI agent is known.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
-      examples:
-      - Math Tutor
-      - Fiction Writer
-      key: gen_ai.agent.name
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the human-readable name of the target GenAI agent is known and low-cardinality.
-      stability: development
-      type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -5430,10 +5375,7 @@ refinements:
       request. It covers the time to produce the response for non-streaming
       calls and the time to produce the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-      SHOULD match the local `gen_ai.agent.name` if it is known and
-      low-cardinality. If the local agent name is high-cardinality or not
-      available, the span name MUST fall back to `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name}`.
 
       **Span status** SHOULD be set to `ERROR` if the request didn\u0027t complete
       successfully. The status description SHOULD match the protocol error
@@ -18490,32 +18432,6 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique and stable identifier of the GenAI hosted agent resource.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      - arn:aws:bedrock:us-east-1:123:agent/42
-      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
-      key: gen_ai.agent.id
-      note: |
-        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the unique identifier of the target GenAI agent is known.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
-      examples:
-      - Math Tutor
-      - Fiction Writer
-      key: gen_ai.agent.name
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the human-readable name of the target GenAI agent is known and low-cardinality.
-      stability: development
-      type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -18883,10 +18799,7 @@ registry:
       request. It covers the time to receive the response for non-streaming
       calls and the time to consume the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-      SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
-      low-cardinality target is not available, the span name MUST fall back
-      to `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name}`.
 
       **Span status** SHOULD be set to `ERROR` if the request didn\u0027t complete
       successfully. The status description SHOULD match the protocol error
@@ -19168,32 +19081,6 @@ registry:
           id: other
           stability: stable
           value: _OTHER
-    - brief: The unique and stable identifier of the GenAI hosted agent resource.
-      examples:
-      - asst_5j66UpCpwteGg4YSxUnt7lPY
-      - arn:aws:bedrock:us-east-1:123:agent/42
-      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
-      key: gen_ai.agent.id
-      note: |
-        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the unique identifier of the target GenAI agent is known.
-      stability: development
-      type: string
-    - brief: Human-readable name of the GenAI agent provided by the application.
-      examples:
-      - Math Tutor
-      - Fiction Writer
-      key: gen_ai.agent.name
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level:
-        recommended: When the human-readable name of the target GenAI agent is known and low-cardinality.
-      stability: development
-      type: string
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -19537,10 +19424,7 @@ registry:
       request. It covers the time to produce the response for non-streaming
       calls and the time to produce the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-      SHOULD match the local `gen_ai.agent.name` if it is known and
-      low-cardinality. If the local agent name is high-cardinality or not
-      available, the span name MUST fall back to `{a2a.method.name}`.
+      **Span name** SHOULD be `{a2a.method.name}`.
 
       **Span status** SHOULD be set to `ERROR` if the request didn\u0027t complete
       successfully. The status description SHOULD match the protocol error

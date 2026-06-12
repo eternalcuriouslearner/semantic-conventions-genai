@@ -35,12 +35,6 @@ attribute_groups:
       - ref: a2a.context.id
         requirement_level:
           conditionally_required: When the A2A request or response contains context id.
-      - ref: gen_ai.agent.id
-        requirement_level:
-          recommended: When the unique identifier of the target GenAI agent is known.
-      - ref: gen_ai.agent.name
-        requirement_level:
-          recommended: When the human-readable name of the target GenAI agent is known and low-cardinality.
       - ref: gen_ai.conversation.id
         requirement_level:
           conditionally_required: When `a2a.context.id` is available and represents the conversation context.

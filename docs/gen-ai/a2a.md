@@ -43,10 +43,7 @@ This span is reported by the A2A client when it initiates an A2A
 request. It covers the time to receive the response for non-streaming
 calls and the time to consume the response stream for streaming calls.
 
-**Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-SHOULD match `gen_ai.agent.name` if known and low-cardinality. If a
-low-cardinality target is not available, the span name MUST fall back
-to `{a2a.method.name}`.
+**Span name** SHOULD be `{a2a.method.name}`.
 
 **Span status** SHOULD be set to `ERROR` if the request didn't complete
 successfully. The status description SHOULD match the protocol error
@@ -85,16 +82,14 @@ the logical A2A request and task lifecycle.
 | [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
 | [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | Artifact IDs associated with the A2A task. | `["art-001", "art-002"]` |
-| [`gen_ai.agent.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [15] | string | The unique and stable identifier of the GenAI hosted agent resource. [16] | `asst_5j66UpCpwteGg4YSxUnt7lPY`; `arn:aws:bedrock:us-east-1:123:agent/42`; `urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456` |
-| [`gen_ai.agent.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [17] | string | Human-readable name of the GenAI agent provided by the application. | `Math Tutor`; `Fiction Writer` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [18] | string | The name of the GenAI operation being performed. [19] | `invoke_agent` |
-| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [20] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [21] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [22] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [23] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [24] | `jsonrpc` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [25] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [26] | `80`; `8080`; `443` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [15] | string | The name of the GenAI operation being performed. [16] | `invoke_agent` |
+| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [17] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
+| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [18] | `http`; `grpc` |
+| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [19] | `1.1`; `2` |
+| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [20] | `tcp`; `quic` |
+| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [21] | `jsonrpc` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [22] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [23] | `80`; `8080`; `443` |
 
 **[1] `a2a.context.id`:** When the A2A request or response contains context id.
 
@@ -148,34 +143,27 @@ Semantic conventions for individual RPC frameworks SHOULD document what `rpc.res
 
 **[14] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[15] `gen_ai.agent.id`:** When the unique identifier of the target GenAI agent is known.
+**[15] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
 
-**[16] `gen_ai.agent.id`:** For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-It's NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
+**[16] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 
-**[17] `gen_ai.agent.name`:** When the human-readable name of the target GenAI agent is known and low-cardinality.
+**[17] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
 
-**[18] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+**[18] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
 
-**[19] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[19] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
 
-**[20] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
-
-**[21] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[22] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[23] `network.transport`:** The value SHOULD be normalized to lowercase.
+**[20] `network.transport`:** The value SHOULD be normalized to lowercase.
 
 Consider always setting the transport when setting a port number, since
 a port number is ambiguous without knowing the transport. For example
 different processes could be listening on TCP port 12345 and UDP port 12345.
 
-**[24] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+**[21] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
 
-**[25] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[22] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[26] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[23] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -313,10 +301,7 @@ This span is reported by the A2A server when it processes an A2A
 request. It covers the time to produce the response for non-streaming
 calls and the time to produce the response stream for streaming calls.
 
-**Span name** SHOULD be `{a2a.method.name} {target}`. The `{target}`
-SHOULD match the local `gen_ai.agent.name` if it is known and
-low-cardinality. If the local agent name is high-cardinality or not
-available, the span name MUST fall back to `{a2a.method.name}`.
+**Span name** SHOULD be `{a2a.method.name}`.
 
 **Span status** SHOULD be set to `ERROR` if the request didn't complete
 successfully. The status description SHOULD match the protocol error
@@ -357,14 +342,12 @@ the logical A2A request and task lifecycle.
 | [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | Artifact IDs associated with the A2A task. | `["art-001", "art-002"]` |
 | [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [16] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
 | [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [17] | `65123` |
-| [`gen_ai.agent.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [18] | string | The unique and stable identifier of the GenAI hosted agent resource. [19] | `asst_5j66UpCpwteGg4YSxUnt7lPY`; `arn:aws:bedrock:us-east-1:123:agent/42`; `urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456` |
-| [`gen_ai.agent.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [20] | string | Human-readable name of the GenAI agent provided by the application. | `Math Tutor`; `Fiction Writer` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [21] | string | The name of the GenAI operation being performed. [22] | `invoke_agent` |
-| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [23] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
-| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [24] | `http`; `grpc` |
-| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [25] | `1.1`; `2` |
-| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [26] | `tcp`; `quic` |
-| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [27] | `jsonrpc` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [18] | string | The name of the GenAI operation being performed. [19] | `invoke_agent` |
+| [`jsonrpc.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/jsonrpc.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [20] | string | Protocol version, as specified in the `jsonrpc` property of the request and its corresponding response. | `2.0`; `1.0` |
+| [`network.protocol.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent. [21] | `http`; `grpc` |
+| [`network.protocol.version`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | The actual version of the protocol used for network communication. [22] | `1.1`; `2` |
+| [`network.transport`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/network.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When applicable. | string | [OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication). [23] | `tcp`; `quic` |
+| [`rpc.system.name`](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md) | ![Release Candidate](https://img.shields.io/badge/-rc-mediumorchid) | `Recommended` When the A2A JSON-RPC binding is used. | string | The Remote Procedure Call (RPC) system. [24] | `jsonrpc` |
 
 **[1] `a2a.context.id`:** When the A2A request or response contains context id.
 
@@ -424,30 +407,23 @@ Semantic conventions for individual RPC frameworks SHOULD document what `rpc.res
 
 **[17] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
 
-**[18] `gen_ai.agent.id`:** When the unique identifier of the target GenAI agent is known.
+**[18] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
 
-**[19] `gen_ai.agent.id`:** For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
-It's NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
+**[19] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 
-**[20] `gen_ai.agent.name`:** When the human-readable name of the target GenAI agent is known and low-cardinality.
+**[20] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
 
-**[21] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+**[21] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
 
-**[22] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[22] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
 
-**[23] `jsonrpc.protocol.version`:** when the A2A JSON-RPC binding is used and the value is not `2.0`.
-
-**[24] `network.protocol.name`:** The value SHOULD be normalized to lowercase.
-
-**[25] `network.protocol.version`:** If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
-
-**[26] `network.transport`:** The value SHOULD be normalized to lowercase.
+**[23] `network.transport`:** The value SHOULD be normalized to lowercase.
 
 Consider always setting the transport when setting a port number, since
 a port number is ambiguous without knowing the transport. For example
 different processes could be listening on TCP port 12345 and UDP port 12345.
 
-**[27] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+**[24] `rpc.system.name`:** This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
 
 ---
 
