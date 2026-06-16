@@ -4148,16 +4148,6 @@ refinements:
         recommended: When the target agent\u0027s Agent Card URL is known.
       stability: development
       type: string
-    - brief: The A2A context identifier used to correlate related messages and tasks.
-      examples:
-      - ctx-7b8f0f5f0d6a4f65
-      key: a2a.context.id
-      provenance:
-        path: ./model/a2a/registry.yaml
-      requirement_level:
-        conditionally_required: When the A2A request or response contains context id.
-      stability: development
-      type: string
     - brief: The unique identifier of the A2A message.
       examples:
       - msg-user-1234
@@ -4207,10 +4197,10 @@ refinements:
           stability: development
           value: tasks/cancel
         - brief: |
-            Request to resume a streaming subscription for task updates.
-          id: tasks_resubscribe
+            Request to subscribe to task updates.
+          id: tasks_subscribe
           stability: development
-          value: tasks/resubscribe
+          value: tasks/subscribe
         - brief: |
             Request to list tasks.
           id: tasks_list
@@ -4218,29 +4208,29 @@ refinements:
           value: tasks/list
         - brief: |
             Request to create or update a task push notification configuration.
-          id: tasks_push_notification_config_set
+          id: task_push_notification_configs_create
           stability: development
-          value: tasks/pushNotificationConfig/set
+          value: taskPushNotificationConfigs/create
         - brief: |
             Request to get a task push notification configuration.
-          id: tasks_push_notification_config_get
+          id: task_push_notification_configs_get
           stability: development
-          value: tasks/pushNotificationConfig/get
+          value: taskPushNotificationConfigs/get
         - brief: |
             Request to list task push notification configurations.
-          id: tasks_push_notification_config_list
+          id: task_push_notification_configs_list
           stability: development
-          value: tasks/pushNotificationConfig/list
+          value: taskPushNotificationConfigs/list
         - brief: |
             Request to delete a task push notification configuration.
-          id: tasks_push_notification_config_delete
+          id: task_push_notification_configs_delete
           stability: development
-          value: tasks/pushNotificationConfig/delete
+          value: taskPushNotificationConfigs/delete
         - brief: |
-            Request to get the authenticated extended agent card.
-          id: agent_get_authenticated_extended_card
+            Request to get the extended agent card.
+          id: agent_get_extended_card
           stability: development
-          value: agent/getAuthenticatedExtendedCard
+          value: agent/getExtendedCard
     - brief: The underlying transport or transport binding used.
       key: a2a.protocol.binding
       note: |
@@ -4285,7 +4275,7 @@ refinements:
       requirement_level: recommended
       stability: development
       type: string
-    - brief: Artifact IDs associated with the A2A task.
+    - brief: IDs of artifacts that the A2A task produced.
       examples:
       - - art-001
         - art-002
@@ -4356,10 +4346,10 @@ refinements:
           stability: development
           value: auth-required
         - brief: |
-            The task state is unknown.
-          id: unknown
+            The task state is unspecified.
+          id: unspecified
           stability: development
-          value: unknown
+          value: unspecified
     - brief: |
         Describes a class of error the operation ended with.
       examples:
@@ -4370,7 +4360,8 @@ refinements:
       key: error.type
       note: |
         This attribute SHOULD be set to the string representation of the
-        JSON-RPC error code when a JSON-RPC error is returned.
+        JSON-RPC error code when a JSON-RPC error is returned, or to the
+        gRPC status code when a gRPC error is returned.
       requirement_level:
         conditionally_required: If and only if the operation fails.
       stability: stable
@@ -4386,11 +4377,11 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
+        This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: When `a2a.context.id` is available and represents the conversation context.
+        conditionally_required: When the A2A request or response contains context id.
       stability: development
       type: string
     - brief: The name of the GenAI operation being performed.
@@ -4608,7 +4599,6 @@ refinements:
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
-      - grpc
       key: network.protocol.name
       note: The value SHOULD be normalized to lowercase.
       requirement_level:
@@ -4685,17 +4675,18 @@ refinements:
         Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
       requirement_level:
         conditionally_required: |
-          When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+          If the A2A JSON-RPC response contains an error code, or if the A2A gRPC response status code is available.
       stability: release_candidate
       type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
+      - grpc
       key: rpc.system.name
       note: |
-        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and MUST be set to `grpc` when the A2A gRPC binding is used. It SHOULD NOT be set for non-RPC bindings.
       requirement_level:
-        recommended: When the A2A JSON-RPC binding is used.
+        conditionally_required: When the A2A gRPC binding is used.
       stability: release_candidate
       type:
         members:
@@ -4759,23 +4750,14 @@ refinements:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     provenance:
       path: ./model/a2a/spans.yaml
     stability: development
     type: a2a.client
   - attributes:
-    - brief: The A2A context identifier used to correlate related messages and tasks.
-      examples:
-      - ctx-7b8f0f5f0d6a4f65
-      key: a2a.context.id
-      provenance:
-        path: ./model/a2a/registry.yaml
-      requirement_level:
-        conditionally_required: When the A2A request or response contains context id.
-      stability: development
-      type: string
     - brief: The unique identifier of the A2A message.
       examples:
       - msg-user-1234
@@ -4825,10 +4807,10 @@ refinements:
           stability: development
           value: tasks/cancel
         - brief: |
-            Request to resume a streaming subscription for task updates.
-          id: tasks_resubscribe
+            Request to subscribe to task updates.
+          id: tasks_subscribe
           stability: development
-          value: tasks/resubscribe
+          value: tasks/subscribe
         - brief: |
             Request to list tasks.
           id: tasks_list
@@ -4836,29 +4818,29 @@ refinements:
           value: tasks/list
         - brief: |
             Request to create or update a task push notification configuration.
-          id: tasks_push_notification_config_set
+          id: task_push_notification_configs_create
           stability: development
-          value: tasks/pushNotificationConfig/set
+          value: taskPushNotificationConfigs/create
         - brief: |
             Request to get a task push notification configuration.
-          id: tasks_push_notification_config_get
+          id: task_push_notification_configs_get
           stability: development
-          value: tasks/pushNotificationConfig/get
+          value: taskPushNotificationConfigs/get
         - brief: |
             Request to list task push notification configurations.
-          id: tasks_push_notification_config_list
+          id: task_push_notification_configs_list
           stability: development
-          value: tasks/pushNotificationConfig/list
+          value: taskPushNotificationConfigs/list
         - brief: |
             Request to delete a task push notification configuration.
-          id: tasks_push_notification_config_delete
+          id: task_push_notification_configs_delete
           stability: development
-          value: tasks/pushNotificationConfig/delete
+          value: taskPushNotificationConfigs/delete
         - brief: |
-            Request to get the authenticated extended agent card.
-          id: agent_get_authenticated_extended_card
+            Request to get the extended agent card.
+          id: agent_get_extended_card
           stability: development
-          value: agent/getAuthenticatedExtendedCard
+          value: agent/getExtendedCard
     - brief: Protocol extensions successfully activated by the server for this request.
       examples:
       - - https://a2a-protocol.org/example/extensions/auth-forward/v1
@@ -4913,7 +4895,7 @@ refinements:
       requirement_level: recommended
       stability: development
       type: string
-    - brief: Artifact IDs associated with the A2A task.
+    - brief: IDs of artifacts that the A2A task produced.
       examples:
       - - art-001
         - art-002
@@ -4984,10 +4966,10 @@ refinements:
           stability: development
           value: auth-required
         - brief: |
-            The task state is unknown.
-          id: unknown
+            The task state is unspecified.
+          id: unspecified
           stability: development
-          value: unknown
+          value: unspecified
     - brief: Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
       examples:
       - client.example.com
@@ -5020,7 +5002,8 @@ refinements:
       key: error.type
       note: |
         This attribute SHOULD be set to the string representation of the
-        JSON-RPC error code when a JSON-RPC error is returned.
+        JSON-RPC error code when a JSON-RPC error is returned, or to the
+        gRPC status code when a gRPC error is returned.
       requirement_level:
         conditionally_required: If and only if the operation fails.
       stability: stable
@@ -5036,11 +5019,11 @@ refinements:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
+        This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: When `a2a.context.id` is available and represents the conversation context.
+        conditionally_required: When the A2A request or response contains context id.
       stability: development
       type: string
     - brief: The name of the GenAI operation being performed.
@@ -5258,7 +5241,6 @@ refinements:
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
-      - grpc
       key: network.protocol.name
       note: The value SHOULD be normalized to lowercase.
       requirement_level:
@@ -5335,17 +5317,18 @@ refinements:
         Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
       requirement_level:
         conditionally_required: |
-          When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+          If the A2A JSON-RPC response contains an error code, or if the A2A gRPC response status code is available.
       stability: release_candidate
       type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
+      - grpc
       key: rpc.system.name
       note: |
-        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and MUST be set to `grpc` when the A2A gRPC binding is used. It SHOULD NOT be set for non-RPC bindings.
       requirement_level:
-        recommended: When the A2A JSON-RPC binding is used.
+        conditionally_required: When the A2A gRPC binding is used.
       stability: release_candidate
       type:
         members:
@@ -5385,8 +5368,9 @@ refinements:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     provenance:
       path: ./model/a2a/spans.yaml
     stability: development
@@ -13227,14 +13211,6 @@ registry:
       path: ./model/a2a/registry.yaml
     stability: development
     type: string
-  - brief: The A2A context identifier used to correlate related messages and tasks.
-    examples:
-    - ctx-7b8f0f5f0d6a4f65
-    key: a2a.context.id
-    provenance:
-      path: ./model/a2a/registry.yaml
-    stability: development
-    type: string
   - brief: The unique identifier of the A2A message.
     examples:
     - msg-user-1234
@@ -13279,10 +13255,10 @@ registry:
         stability: development
         value: tasks/cancel
       - brief: |
-          Request to resume a streaming subscription for task updates.
-        id: tasks_resubscribe
+          Request to subscribe to task updates.
+        id: tasks_subscribe
         stability: development
-        value: tasks/resubscribe
+        value: tasks/subscribe
       - brief: |
           Request to list tasks.
         id: tasks_list
@@ -13290,29 +13266,29 @@ registry:
         value: tasks/list
       - brief: |
           Request to create or update a task push notification configuration.
-        id: tasks_push_notification_config_set
+        id: task_push_notification_configs_create
         stability: development
-        value: tasks/pushNotificationConfig/set
+        value: taskPushNotificationConfigs/create
       - brief: |
           Request to get a task push notification configuration.
-        id: tasks_push_notification_config_get
+        id: task_push_notification_configs_get
         stability: development
-        value: tasks/pushNotificationConfig/get
+        value: taskPushNotificationConfigs/get
       - brief: |
           Request to list task push notification configurations.
-        id: tasks_push_notification_config_list
+        id: task_push_notification_configs_list
         stability: development
-        value: tasks/pushNotificationConfig/list
+        value: taskPushNotificationConfigs/list
       - brief: |
           Request to delete a task push notification configuration.
-        id: tasks_push_notification_config_delete
+        id: task_push_notification_configs_delete
         stability: development
-        value: tasks/pushNotificationConfig/delete
+        value: taskPushNotificationConfigs/delete
       - brief: |
-          Request to get the authenticated extended agent card.
-        id: agent_get_authenticated_extended_card
+          Request to get the extended agent card.
+        id: agent_get_extended_card
         stability: development
-        value: agent/getAuthenticatedExtendedCard
+        value: agent/getExtendedCard
   - brief: Protocol extensions successfully activated by the server for this request.
     examples:
     - - https://a2a-protocol.org/example/extensions/auth-forward/v1
@@ -13361,7 +13337,7 @@ registry:
       path: ./model/a2a/registry.yaml
     stability: development
     type: string
-  - brief: Artifact IDs associated with the A2A task.
+  - brief: IDs of artifacts that the A2A task produced.
     examples:
     - - art-001
       - art-002
@@ -13426,10 +13402,10 @@ registry:
         stability: development
         value: auth-required
       - brief: |
-          The task state is unknown.
-        id: unknown
+          The task state is unspecified.
+        id: unspecified
         stability: development
-        value: unknown
+        value: unspecified
   - brief: |
       The unique identifier of the AWS Bedrock Guardrail. A [guardrail](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) helps safeguard and prevent unwanted behavior from model responses or user messages.
     examples:
@@ -18199,16 +18175,6 @@ registry:
         recommended: When the target agent\u0027s Agent Card URL is known.
       stability: development
       type: string
-    - brief: The A2A context identifier used to correlate related messages and tasks.
-      examples:
-      - ctx-7b8f0f5f0d6a4f65
-      key: a2a.context.id
-      provenance:
-        path: ./model/a2a/registry.yaml
-      requirement_level:
-        conditionally_required: When the A2A request or response contains context id.
-      stability: development
-      type: string
     - brief: The unique identifier of the A2A message.
       examples:
       - msg-user-1234
@@ -18258,10 +18224,10 @@ registry:
           stability: development
           value: tasks/cancel
         - brief: |
-            Request to resume a streaming subscription for task updates.
-          id: tasks_resubscribe
+            Request to subscribe to task updates.
+          id: tasks_subscribe
           stability: development
-          value: tasks/resubscribe
+          value: tasks/subscribe
         - brief: |
             Request to list tasks.
           id: tasks_list
@@ -18269,29 +18235,29 @@ registry:
           value: tasks/list
         - brief: |
             Request to create or update a task push notification configuration.
-          id: tasks_push_notification_config_set
+          id: task_push_notification_configs_create
           stability: development
-          value: tasks/pushNotificationConfig/set
+          value: taskPushNotificationConfigs/create
         - brief: |
             Request to get a task push notification configuration.
-          id: tasks_push_notification_config_get
+          id: task_push_notification_configs_get
           stability: development
-          value: tasks/pushNotificationConfig/get
+          value: taskPushNotificationConfigs/get
         - brief: |
             Request to list task push notification configurations.
-          id: tasks_push_notification_config_list
+          id: task_push_notification_configs_list
           stability: development
-          value: tasks/pushNotificationConfig/list
+          value: taskPushNotificationConfigs/list
         - brief: |
             Request to delete a task push notification configuration.
-          id: tasks_push_notification_config_delete
+          id: task_push_notification_configs_delete
           stability: development
-          value: tasks/pushNotificationConfig/delete
+          value: taskPushNotificationConfigs/delete
         - brief: |
-            Request to get the authenticated extended agent card.
-          id: agent_get_authenticated_extended_card
+            Request to get the extended agent card.
+          id: agent_get_extended_card
           stability: development
-          value: agent/getAuthenticatedExtendedCard
+          value: agent/getExtendedCard
     - brief: The underlying transport or transport binding used.
       key: a2a.protocol.binding
       note: |
@@ -18336,7 +18302,7 @@ registry:
       requirement_level: recommended
       stability: development
       type: string
-    - brief: Artifact IDs associated with the A2A task.
+    - brief: IDs of artifacts that the A2A task produced.
       examples:
       - - art-001
         - art-002
@@ -18407,10 +18373,10 @@ registry:
           stability: development
           value: auth-required
         - brief: |
-            The task state is unknown.
-          id: unknown
+            The task state is unspecified.
+          id: unspecified
           stability: development
-          value: unknown
+          value: unspecified
     - brief: |
         Describes a class of error the operation ended with.
       examples:
@@ -18421,7 +18387,8 @@ registry:
       key: error.type
       note: |
         This attribute SHOULD be set to the string representation of the
-        JSON-RPC error code when a JSON-RPC error is returned.
+        JSON-RPC error code when a JSON-RPC error is returned, or to the
+        gRPC status code when a gRPC error is returned.
       requirement_level:
         conditionally_required: If and only if the operation fails.
       stability: stable
@@ -18437,11 +18404,11 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
+        This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: When `a2a.context.id` is available and represents the conversation context.
+        conditionally_required: When the A2A request or response contains context id.
       stability: development
       type: string
     - brief: The name of the GenAI operation being performed.
@@ -18659,7 +18626,6 @@ registry:
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
-      - grpc
       key: network.protocol.name
       note: The value SHOULD be normalized to lowercase.
       requirement_level:
@@ -18736,17 +18702,18 @@ registry:
         Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
       requirement_level:
         conditionally_required: |
-          When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+          If the A2A JSON-RPC response contains an error code, or if the A2A gRPC response status code is available.
       stability: release_candidate
       type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
+      - grpc
       key: rpc.system.name
       note: |
-        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and MUST be set to `grpc` when the A2A gRPC binding is used. It SHOULD NOT be set for non-RPC bindings.
       requirement_level:
-        recommended: When the A2A JSON-RPC binding is used.
+        conditionally_required: When the A2A gRPC binding is used.
       stability: release_candidate
       type:
         members:
@@ -18809,23 +18776,14 @@ registry:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     provenance:
       path: ./model/a2a/spans.yaml
     stability: development
     type: a2a.client
   - attributes:
-    - brief: The A2A context identifier used to correlate related messages and tasks.
-      examples:
-      - ctx-7b8f0f5f0d6a4f65
-      key: a2a.context.id
-      provenance:
-        path: ./model/a2a/registry.yaml
-      requirement_level:
-        conditionally_required: When the A2A request or response contains context id.
-      stability: development
-      type: string
     - brief: The unique identifier of the A2A message.
       examples:
       - msg-user-1234
@@ -18875,10 +18833,10 @@ registry:
           stability: development
           value: tasks/cancel
         - brief: |
-            Request to resume a streaming subscription for task updates.
-          id: tasks_resubscribe
+            Request to subscribe to task updates.
+          id: tasks_subscribe
           stability: development
-          value: tasks/resubscribe
+          value: tasks/subscribe
         - brief: |
             Request to list tasks.
           id: tasks_list
@@ -18886,29 +18844,29 @@ registry:
           value: tasks/list
         - brief: |
             Request to create or update a task push notification configuration.
-          id: tasks_push_notification_config_set
+          id: task_push_notification_configs_create
           stability: development
-          value: tasks/pushNotificationConfig/set
+          value: taskPushNotificationConfigs/create
         - brief: |
             Request to get a task push notification configuration.
-          id: tasks_push_notification_config_get
+          id: task_push_notification_configs_get
           stability: development
-          value: tasks/pushNotificationConfig/get
+          value: taskPushNotificationConfigs/get
         - brief: |
             Request to list task push notification configurations.
-          id: tasks_push_notification_config_list
+          id: task_push_notification_configs_list
           stability: development
-          value: tasks/pushNotificationConfig/list
+          value: taskPushNotificationConfigs/list
         - brief: |
             Request to delete a task push notification configuration.
-          id: tasks_push_notification_config_delete
+          id: task_push_notification_configs_delete
           stability: development
-          value: tasks/pushNotificationConfig/delete
+          value: taskPushNotificationConfigs/delete
         - brief: |
-            Request to get the authenticated extended agent card.
-          id: agent_get_authenticated_extended_card
+            Request to get the extended agent card.
+          id: agent_get_extended_card
           stability: development
-          value: agent/getAuthenticatedExtendedCard
+          value: agent/getExtendedCard
     - brief: Protocol extensions successfully activated by the server for this request.
       examples:
       - - https://a2a-protocol.org/example/extensions/auth-forward/v1
@@ -18963,7 +18921,7 @@ registry:
       requirement_level: recommended
       stability: development
       type: string
-    - brief: Artifact IDs associated with the A2A task.
+    - brief: IDs of artifacts that the A2A task produced.
       examples:
       - - art-001
         - art-002
@@ -19034,10 +18992,10 @@ registry:
           stability: development
           value: auth-required
         - brief: |
-            The task state is unknown.
-          id: unknown
+            The task state is unspecified.
+          id: unspecified
           stability: development
-          value: unknown
+          value: unspecified
     - brief: Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
       examples:
       - client.example.com
@@ -19070,7 +19028,8 @@ registry:
       key: error.type
       note: |
         This attribute SHOULD be set to the string representation of the
-        JSON-RPC error code when a JSON-RPC error is returned.
+        JSON-RPC error code when a JSON-RPC error is returned, or to the
+        gRPC status code when a gRPC error is returned.
       requirement_level:
         conditionally_required: If and only if the operation fails.
       stability: stable
@@ -19086,11 +19045,11 @@ registry:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
       key: gen_ai.conversation.id
       note: |
-        When available, `gen_ai.conversation.id` SHOULD be set to the same value as `a2a.context.id` to allow cross-GenAI correlation.
+        This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
       provenance:
         path: ./model/gen-ai/registry.yaml
       requirement_level:
-        conditionally_required: When `a2a.context.id` is available and represents the conversation context.
+        conditionally_required: When the A2A request or response contains context id.
       stability: development
       type: string
     - brief: The name of the GenAI operation being performed.
@@ -19308,7 +19267,6 @@ registry:
     - brief: \u0027[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.\u0027
       examples:
       - http
-      - grpc
       key: network.protocol.name
       note: The value SHOULD be normalized to lowercase.
       requirement_level:
@@ -19385,17 +19343,18 @@ registry:
         Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
       requirement_level:
         conditionally_required: |
-          When the A2A gRPC binding is used, or if the A2A JSON-RPC response contains an error code.
+          If the A2A JSON-RPC response contains an error code, or if the A2A gRPC response status code is available.
       stability: release_candidate
       type: string
     - brief: The Remote Procedure Call (RPC) system.
       examples:
       - jsonrpc
+      - grpc
       key: rpc.system.name
       note: |
-        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and SHOULD NOT be set for non-RPC bindings.
+        This attribute SHOULD be set to `jsonrpc` when the A2A JSON-RPC binding is used and MUST be set to `grpc` when the A2A gRPC binding is used. It SHOULD NOT be set for non-RPC bindings.
       requirement_level:
-        recommended: When the A2A JSON-RPC binding is used.
+        conditionally_required: When the A2A gRPC binding is used.
       stability: release_candidate
       type:
         members:
@@ -19434,8 +19393,9 @@ registry:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     provenance:
       path: ./model/a2a/spans.yaml
     stability: development

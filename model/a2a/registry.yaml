@@ -25,40 +25,40 @@ attributes:
           brief: >
             Request to cancel a task.
           stability: development
-        - id: tasks_resubscribe
-          value: tasks/resubscribe
+        - id: tasks_subscribe
+          value: tasks/subscribe
           brief: >
-            Request to resume a streaming subscription for task updates.
+            Request to subscribe to task updates.
           stability: development
         - id: tasks_list
           value: tasks/list
           brief: >
             Request to list tasks.
           stability: development
-        - id: tasks_push_notification_config_set
-          value: tasks/pushNotificationConfig/set
+        - id: task_push_notification_configs_create
+          value: taskPushNotificationConfigs/create
           brief: >
             Request to create or update a task push notification configuration.
           stability: development
-        - id: tasks_push_notification_config_get
-          value: tasks/pushNotificationConfig/get
+        - id: task_push_notification_configs_get
+          value: taskPushNotificationConfigs/get
           brief: >
             Request to get a task push notification configuration.
           stability: development
-        - id: tasks_push_notification_config_list
-          value: tasks/pushNotificationConfig/list
+        - id: task_push_notification_configs_list
+          value: taskPushNotificationConfigs/list
           brief: >
             Request to list task push notification configurations.
           stability: development
-        - id: tasks_push_notification_config_delete
-          value: tasks/pushNotificationConfig/delete
+        - id: task_push_notification_configs_delete
+          value: taskPushNotificationConfigs/delete
           brief: >
             Request to delete a task push notification configuration.
           stability: development
-        - id: agent_get_authenticated_extended_card
-          value: agent/getAuthenticatedExtendedCard
+        - id: agent_get_extended_card
+          value: agent/getExtendedCard
           brief: >
-            Request to get the authenticated extended agent card.
+            Request to get the extended agent card.
           stability: development
     brief: The name of the A2A request method.
     stability: development
@@ -103,7 +103,7 @@ attributes:
     stability: development
   - key: a2a.task.artifact_ids
     type: string[]
-    brief: Artifact IDs associated with the A2A task.
+    brief: IDs of artifacts that the A2A task produced.
     examples:
       - [art-001, art-002]
     stability: development
@@ -172,15 +172,10 @@ attributes:
           brief: >
             The task requires authentication.
           stability: development
-        - id: unknown
-          value: unknown
+        - id: unspecified
+          value: unspecified
           brief: >
-            The task state is unknown.
+            The task state is unspecified.
           stability: development
     brief: The state of an A2A task.
-    stability: development
-  - key: a2a.context.id
-    type: string
-    brief: The A2A context identifier used to correlate related messages and tasks.
-    examples: ["ctx-7b8f0f5f0d6a4f65"]
     stability: development

@@ -21,8 +21,9 @@ spans:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     stability: development
     attributes:
       - ref_group: a2a.common.attributes
@@ -52,8 +53,9 @@ spans:
       when the A2A method invokes an agent. In that case, instrumentation
       SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
-      HTTP conventions describe the transport request. A2A conventions describe
-      the logical A2A request and task lifecycle.
+      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
+      request. A2A conventions describe the logical A2A request and task
+      lifecycle.
     stability: development
     attributes:
       - ref_group: a2a.common.attributes

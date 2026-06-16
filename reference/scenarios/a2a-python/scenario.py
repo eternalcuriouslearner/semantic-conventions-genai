@@ -47,7 +47,7 @@ def _task_state_value(state: int) -> str:
         a2a_types.TaskState.Value("TASK_STATE_INPUT_REQUIRED"): "input-required",
         a2a_types.TaskState.Value("TASK_STATE_REJECTED"): "rejected",
         a2a_types.TaskState.Value("TASK_STATE_AUTH_REQUIRED"): "auth-required",
-    }.get(state, "unknown")
+    }.get(state, "unspecified")
 
 
 def _capture_jsonrpc_request(observed_requests: dict[str, str]):
@@ -94,7 +94,6 @@ def _base_span_attrs(method: str):
 def _set_task_response_attrs(span, task_id, task_state, context_id, artifact_ids=None):
     span.set_attribute("a2a.task.id", task_id)
     span.set_attribute("a2a.task.state", task_state)
-    span.set_attribute("a2a.context.id", context_id)
     span.set_attribute("gen_ai.conversation.id", context_id)
     if artifact_ids:
         span.set_attribute("a2a.task.artifact_ids", artifact_ids)
