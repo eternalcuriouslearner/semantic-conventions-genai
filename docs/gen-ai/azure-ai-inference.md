@@ -124,8 +124,10 @@ Additional output format details may be recorded in the future in the
 
 **[10] `azure.resource_provider.namespace`:** When `azure.resource_provider.namespace` attribute is populated, it MUST be set to `Microsoft.CognitiveServices` for all operations performed by Azure AI Inference clients.
 
-**[11] `gen_ai.conversation.compacted`:** Instrumentations SHOULD set this attribute to `true` only when they can reliably
-determine that context compaction was applied.
+**[11] `gen_ai.conversation.compacted`:** This attribute is a positive indicator of context compaction. Instrumentations
+SHOULD set it to `true` only when they can reliably determine that context
+compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+SHOULD leave it unset otherwise.
 
 **[12] `gen_ai.response.model`:** If available. The name of the GenAI model that provided the response. If the model is supplied by a vendor, then the value must be the exact name of the model actually used. If the model is a fine-tuned custom model, the value should have a more specific name than the base model that's been fine-tuned.
 
