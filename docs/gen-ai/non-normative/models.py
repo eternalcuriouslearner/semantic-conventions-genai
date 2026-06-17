@@ -279,17 +279,14 @@ MessagePart = Union[
     # e.g. structured output, hosted tool call, etc.
 ]
 
+# System instructions are modeled as their own list of parts, independent of
+# the input/output message parts. TextPart is the only member today;
+# add other system instruction part types once there is an existing
+# provider with non-text system instructions.
 SystemInstructionPart = Union[
     TextPart,
-    ToolCallRequestPart,
-    ToolCallResponsePart,
-    ServerToolCallPart,
-    ServerToolCallResponsePart,
-    BlobPart,
-    FilePart,
-    UriPart,
-    ReasoningPart,
     GenericPart,  # Catch-all for any other type
+    # Add other message part types here as needed
 ]
 
 
@@ -371,7 +368,7 @@ class OutputMessages(RootModel[List[OutputMessage]]):
 
 class SystemInstructions(RootModel[List[SystemInstructionPart]]):
     """
-    Represents the list of input messages sent to the model.
+    Represents the system instructions provided to the model.
     """
 
     pass
