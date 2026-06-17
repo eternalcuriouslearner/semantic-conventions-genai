@@ -262,8 +262,10 @@ attributes:
     type: boolean
     brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
     note: |
-      Instrumentations SHOULD set this attribute to `true` only when they can reliably
-      determine that context compaction was applied.
+      This attribute is a positive indicator of context compaction. Instrumentations
+      SHOULD set it to `true` only when they can reliably determine that context
+      compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+      SHOULD leave it unset otherwise.
     examples: [true]
     stability: development
   - key: gen_ai.agent.id
