@@ -39,13 +39,6 @@ attribute_groups:
         note: >
           This attribute SHOULD be set to the value of the A2A `contextId`
           protocol field to allow cross-GenAI correlation.
-      - ref: gen_ai.operation.name
-        brief: The name of the GenAI operation being performed.
-        examples: ["invoke_agent"]
-        requirement_level:
-          recommended: >
-            SHOULD be set to `invoke_agent` when the A2A method invokes an
-            agent, such as `message/send` or `message/stream`.
       - ref: gen_ai.request.stream
         requirement_level:
           conditionally_required: If and only if the A2A request is streaming.

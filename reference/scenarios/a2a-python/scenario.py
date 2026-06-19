@@ -8,6 +8,7 @@ import httpx
 from a2a import types as a2a_types
 from a2a.client import ClientConfig, create_client, minimal_agent_card
 from a2a.utils.constants import TransportProtocol
+from opentelemetry.trace import SpanKind
 from reference_shared import (
     flush_and_shutdown,
     mock_server_host_port,
@@ -120,7 +121,7 @@ async def run_message_send_reference() -> None:
         "a2a.protocol.requested_extensions": REQUESTED_EXTENSIONS,
         "gen_ai.operation.name": "invoke_agent",
     }
-    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
             response = await anext(client.send_message(request))
         task = response.task
@@ -159,7 +160,7 @@ async def run_message_stream_reference() -> None:
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.request.stream": True,
     }
-    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=True, observed_requests=observed_requests) as client:
             async for event in client.send_message(request):
                 event_count += 1
@@ -183,7 +184,7 @@ async def run_tasks_get_reference() -> None:
     )
 
     span_attrs = _base_span_attrs(method)
-    with _reference_tracer.start_as_current_span(method, attributes=span_attrs) as span:
+    with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
             task = await client.get_task(request)
         task_state = _task_state_value(task.status.state)

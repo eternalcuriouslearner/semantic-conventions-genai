@@ -27,6 +27,13 @@ spans:
     stability: development
     attributes:
       - ref_group: a2a.common.attributes
+      - ref: gen_ai.operation.name
+        brief: The name of the GenAI operation being performed.
+        examples: ["invoke_agent"]
+        requirement_level:
+          recommended: >
+            SHOULD be set to `invoke_agent` when the A2A method invokes an
+            agent, such as `message/send` or `message/stream`.
       - ref_group: a2a.client.address_and_port.attributes
       - ref: a2a.agent.card.url
         requirement_level:
@@ -48,10 +55,6 @@ spans:
       **Span status** SHOULD be set to `ERROR` if the request didn't complete
       successfully. The status description SHOULD match the protocol error
       message.
-
-      A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
-      when the A2A method invokes an agent. In that case, instrumentation
-      SHOULD set `gen_ai.operation.name` to `invoke_agent`.
 
       HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
       request. A2A conventions describe the logical A2A request and task
