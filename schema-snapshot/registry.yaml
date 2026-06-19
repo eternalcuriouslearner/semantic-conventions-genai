@@ -23,6 +23,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -401,6 +416,22 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -1798,6 +1829,172 @@ refinements:
       path: ./model/gen-ai/metrics.yaml
     stability: development
     unit: \u0027{token}\u0027
+  - annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+    - brief: |
+        Describes a class of error the operation ended with.
+      examples:
+      - timeout
+      - java.net.UnknownHostException
+      - server_certificate_invalid
+      - \u0027500\u0027
+      key: error.type
+      note: |
+        The `error.type` SHOULD match the error code returned by the Generative AI provider or the client library,
+        the canonical name of exception that occurred, or another low-cardinality error identifier.
+        Instrumentations SHOULD document the list of errors they report.
+      requirement_level:
+        conditionally_required: If the operation ended in an error.
+      stability: stable
+      type:
+        members:
+        - brief: |
+            A fallback error value to be used when the instrumentation doesn\u0027t define a custom value.
+          id: other
+          stability: stable
+          value: _OTHER
+    - brief: Human-readable name of the GenAI agent provided by the application.
+      examples:
+      - Math Tutor
+      - Fiction Writer
+      key: gen_ai.agent.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: Name of the tool utilized by the agent.
+      examples:
+      - Flights
+      key: gen_ai.tool.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: required
+      stability: development
+      type: string
+    - brief: Type of the tool utilized by the agent
+      examples:
+      - function
+      - extension
+      - datastore
+      key: gen_ai.tool.type
+      note: |
+        Extension: A tool executed on the agent-side to directly call external APIs, bridging the gap between the agent and real-world systems.
+          Agent-side operations involve actions that are performed by the agent on the server or within the agent\u0027s controlled environment.
+        Function: A tool executed on the client-side, where the agent generates parameters for a predefined function, and the client executes the logic.
+          Client-side operations are actions taken on the user\u0027s end or within the client application.
+        Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: recommended
+      stability: development
+      type: string
+    brief: |
+      The duration of a single tool execution.
+    id: gen_ai.execute_tool.duration
+    instrument: histogram
+    name: gen_ai.execute_tool.duration
+    note: |
+      Instrumentation that can reliably bound a single tool call SHOULD
+      record this metric for every tool execution they can observe.
+
+      When this metric is reported alongside a `gen_ai.execute_tool` span,
+      the metric value SHOULD be the same as the span duration.
+    provenance:
+      path: ./model/gen-ai/metrics.yaml
+    stability: development
+    unit: s
+  - annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+    - brief: |
+        Describes a class of error the operation ended with.
+      examples:
+      - timeout
+      - java.net.UnknownHostException
+      - server_certificate_invalid
+      - \u0027500\u0027
+      key: error.type
+      note: |
+        The `error.type` SHOULD match the error code returned by the Generative AI provider or the client library,
+        the canonical name of exception that occurred, or another low-cardinality error identifier.
+        Instrumentations SHOULD document the list of errors they report.
+      requirement_level:
+        conditionally_required: If the operation ended in an error.
+      stability: stable
+      type:
+        members:
+        - brief: |
+            A fallback error value to be used when the instrumentation doesn\u0027t define a custom value.
+          id: other
+          stability: stable
+          value: _OTHER
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
+      examples:
+      - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
+      key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: Human-readable name of the GenAI agent provided by the application.
+      examples:
+      - Math Tutor
+      - Fiction Writer
+      key: gen_ai.agent.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: The version of the GenAI agent.
+      examples:
+      - 1.0.0
+      - 2025-05-01
+      key: gen_ai.agent.version
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    brief: |
+      The end-to-end duration of a single agent invocation, from the moment the invocation starts until the agent emits the last chunk of its final response or terminates with an error.
+    id: gen_ai.invoke_agent.duration
+    instrument: histogram
+    name: gen_ai.invoke_agent.duration
+    note: |
+      Intended for instrumentations of agent frameworks (for example, ADK,
+      LangChain agents, CrewAI agents) that can reliably bound a single
+      agent invocation.
+
+      If instrumentation can only measure a single provider-facing client
+      operation (for example, one model API call),
+      `gen_ai.client.operation.duration` SHOULD be used instead. If
+      instrumentation can reliably bound a higher-level workflow that
+      coordinates multiple agents, `gen_ai.workflow.duration` SHOULD be
+      used for that workflow. Instrumentation MAY emit several of these
+      metrics for the same request path when more than one boundary is
+      available.
+
+      When this metric is reported alongside a `gen_ai.invoke_agent` span,
+      the metric value SHOULD be the same as the span duration.
+    provenance:
+      path: ./model/gen-ai/metrics.yaml
+    stability: development
+    unit: s
   - annotations:
       code_generation:
         metric_value_type: double
@@ -5398,6 +5595,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -5779,6 +5991,21 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        Corresponds to the [`output_config.effort`](https://docs.anthropic.com/en/docs/build-with-claude/effort) request parameter.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -6114,6 +6341,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -6495,6 +6737,22 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -6826,6 +7084,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -7217,6 +7490,22 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -8382,6 +8671,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -8763,6 +9067,22 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -10078,103 +10398,6 @@ refinements:
           id: speech
           stability: development
           value: speech
-    - brief: The Generative AI provider as identified by the client or server instrumentation.
-      key: gen_ai.provider.name
-      note: |
-        Semantic conventions for individual GenAI operations SHOULD clarify which
-        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
-        agent providers) apply when it is not clear from context.
-
-        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
-        and may differ from the actual upstream provider. For example, a client SDK
-        may be configured against a proxy or hosting platform that transparently
-        relays requests to a different provider.
-
-        The `gen_ai.provider.name` attribute acts as a discriminator that
-        identifies the GenAI telemetry format flavor specific to that provider
-        within GenAI semantic conventions.
-        It SHOULD be set consistently with provider-specific attributes and signals.
-        For example, GenAI spans, metrics, and events related to AWS Bedrock
-        should have the `gen_ai.provider.name` set to `aws.bedrock` and include
-        applicable `aws.bedrock.*` attributes and are not expected to include
-        `openai.*` attributes.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level: required
-      sampling_relevant: true
-      stability: development
-      type:
-        members:
-        - brief: \u0027[OpenAI](https://openai.com/)\u0027
-          id: openai
-          stability: development
-          value: openai
-        - brief: Any Google generative AI endpoint
-          id: gcp.gen_ai
-          note: |
-            May be used when specific backend is unknown.
-          stability: development
-          value: gcp.gen_ai
-        - brief: \u0027[Vertex AI](https://cloud.google.com/vertex-ai)\u0027
-          id: gcp.vertex_ai
-          note: |
-            Used when accessing the \u0027aiplatform.googleapis.com\u0027 endpoint.
-          stability: development
-          value: gcp.vertex_ai
-        - brief: \u0027[Gemini](https://cloud.google.com/products/gemini)\u0027
-          id: gcp.gemini
-          note: |
-            Used when accessing the \u0027generativelanguage.googleapis.com\u0027 endpoint. Also known as the AI Studio API.
-          stability: development
-          value: gcp.gemini
-        - brief: \u0027[Anthropic](https://www.anthropic.com/)\u0027
-          id: anthropic
-          stability: development
-          value: anthropic
-        - brief: \u0027[Cohere](https://cohere.com/)\u0027
-          id: cohere
-          stability: development
-          value: cohere
-        - brief: Azure AI Inference
-          id: azure.ai.inference
-          stability: development
-          value: azure.ai.inference
-        - brief: \u0027[Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview)\u0027
-          id: azure.ai.openai
-          stability: development
-          value: azure.ai.openai
-        - brief: \u0027[IBM Watsonx AI](https://www.ibm.com/products/watsonx-ai)\u0027
-          id: ibm.watsonx.ai
-          stability: development
-          value: ibm.watsonx.ai
-        - brief: \u0027[AWS Bedrock](https://aws.amazon.com/bedrock)\u0027
-          id: aws.bedrock
-          stability: development
-          value: aws.bedrock
-        - brief: \u0027[Perplexity](https://www.perplexity.ai/)\u0027
-          id: perplexity
-          stability: development
-          value: perplexity
-        - brief: \u0027[xAI](https://x.ai/)\u0027
-          id: x_ai
-          stability: development
-          value: x_ai
-        - brief: \u0027[DeepSeek](https://www.deepseek.com/)\u0027
-          id: deepseek
-          stability: development
-          value: deepseek
-        - brief: \u0027[Groq](https://groq.com/)\u0027
-          id: groq
-          stability: development
-          value: groq
-        - brief: \u0027[Mistral AI](https://mistral.ai/)\u0027
-          id: mistral_ai
-          stability: development
-          value: mistral_ai
-        - brief: \u0027[Moonshot AI](https://www.moonshot.ai/)\u0027
-          id: moonshot_ai
-          stability: development
-          value: moonshot_ai
     - brief: The target number of candidate completions to return.
       examples:
       - 3
@@ -12461,6 +12684,21 @@ refinements:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -12851,6 +13089,21 @@ refinements:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        Corresponds to the [`reasoning.effort`](https://platform.openai.com/docs/guides/reasoning#reasoning-effort) request parameter.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -13464,6 +13717,19 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: string
+  - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+    examples:
+    - true
+    key: gen_ai.conversation.compacted
+    note: |
+      This attribute is a positive indicator of context compaction. Instrumentations
+      SHOULD set it to `true` only when they can reliably determine that context
+      compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+      SHOULD leave it unset otherwise.
+    provenance:
+      path: ./model/gen-ai/registry.yaml
+    stability: development
+    type: boolean
   - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
     examples:
     - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -13966,6 +14232,20 @@ registry:
       path: ./model/gen-ai/registry.yaml
     stability: development
     type: double
+  - brief: |
+      The reasoning or thinking effort level requested for a GenAI model.
+    examples:
+    - low
+    - medium
+    - high
+    key: gen_ai.request.reasoning.level
+    note: |
+      The value SHOULD be the exact string value sent to the provider.
+      Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+    provenance:
+      path: ./model/gen-ai/registry.yaml
+    stability: development
+    type: string
   - brief: Requests with same seed value more likely to return same result.
     examples:
     - 100
@@ -14605,6 +14885,21 @@ registry:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -14983,6 +15278,22 @@ registry:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -16373,6 +16684,170 @@ registry:
       path: ./model/gen-ai/metrics.yaml
     stability: development
     unit: \u0027{token}\u0027
+  - annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+    - brief: |
+        Describes a class of error the operation ended with.
+      examples:
+      - timeout
+      - java.net.UnknownHostException
+      - server_certificate_invalid
+      - \u0027500\u0027
+      key: error.type
+      note: |
+        The `error.type` SHOULD match the error code returned by the Generative AI provider or the client library,
+        the canonical name of exception that occurred, or another low-cardinality error identifier.
+        Instrumentations SHOULD document the list of errors they report.
+      requirement_level:
+        conditionally_required: If the operation ended in an error.
+      stability: stable
+      type:
+        members:
+        - brief: |
+            A fallback error value to be used when the instrumentation doesn\u0027t define a custom value.
+          id: other
+          stability: stable
+          value: _OTHER
+    - brief: Human-readable name of the GenAI agent provided by the application.
+      examples:
+      - Math Tutor
+      - Fiction Writer
+      key: gen_ai.agent.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: Name of the tool utilized by the agent.
+      examples:
+      - Flights
+      key: gen_ai.tool.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: required
+      stability: development
+      type: string
+    - brief: Type of the tool utilized by the agent
+      examples:
+      - function
+      - extension
+      - datastore
+      key: gen_ai.tool.type
+      note: |
+        Extension: A tool executed on the agent-side to directly call external APIs, bridging the gap between the agent and real-world systems.
+          Agent-side operations involve actions that are performed by the agent on the server or within the agent\u0027s controlled environment.
+        Function: A tool executed on the client-side, where the agent generates parameters for a predefined function, and the client executes the logic.
+          Client-side operations are actions taken on the user\u0027s end or within the client application.
+        Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level: recommended
+      stability: development
+      type: string
+    brief: |
+      The duration of a single tool execution.
+    instrument: histogram
+    name: gen_ai.execute_tool.duration
+    note: |
+      Instrumentation that can reliably bound a single tool call SHOULD
+      record this metric for every tool execution they can observe.
+
+      When this metric is reported alongside a `gen_ai.execute_tool` span,
+      the metric value SHOULD be the same as the span duration.
+    provenance:
+      path: ./model/gen-ai/metrics.yaml
+    stability: development
+    unit: s
+  - annotations:
+      code_generation:
+        metric_value_type: double
+    attributes:
+    - brief: |
+        Describes a class of error the operation ended with.
+      examples:
+      - timeout
+      - java.net.UnknownHostException
+      - server_certificate_invalid
+      - \u0027500\u0027
+      key: error.type
+      note: |
+        The `error.type` SHOULD match the error code returned by the Generative AI provider or the client library,
+        the canonical name of exception that occurred, or another low-cardinality error identifier.
+        Instrumentations SHOULD document the list of errors they report.
+      requirement_level:
+        conditionally_required: If the operation ended in an error.
+      stability: stable
+      type:
+        members:
+        - brief: |
+            A fallback error value to be used when the instrumentation doesn\u0027t define a custom value.
+          id: other
+          stability: stable
+          value: _OTHER
+    - brief: The unique and stable identifier of the GenAI hosted agent resource.
+      examples:
+      - asst_5j66UpCpwteGg4YSxUnt7lPY
+      - arn:aws:bedrock:us-east-1:123:agent/42
+      - urn:agent:projects-123:projects:123:locations:us-east1:aiplatform:reasoningEngines:456
+      key: gen_ai.agent.id
+      note: |
+        For hosted agents, this SHOULD be the provider-assigned stable identifier of the agent resource such as [AWS Bedrock agent ARN](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Agent.html) or [GCP Agent Registry identifier](https://docs.cloud.google.com/agent-registry/concepts#agent-identifier).
+        It\u0027s NOT RECOMMENDED to record in-memory agent instance ids on this attribute due to their transient nature.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: Human-readable name of the GenAI agent provided by the application.
+      examples:
+      - Math Tutor
+      - Fiction Writer
+      key: gen_ai.agent.name
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    - brief: The version of the GenAI agent.
+      examples:
+      - 1.0.0
+      - 2025-05-01
+      key: gen_ai.agent.version
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        conditionally_required: When available.
+      stability: development
+      type: string
+    brief: |
+      The end-to-end duration of a single agent invocation, from the moment the invocation starts until the agent emits the last chunk of its final response or terminates with an error.
+    instrument: histogram
+    name: gen_ai.invoke_agent.duration
+    note: |
+      Intended for instrumentations of agent frameworks (for example, ADK,
+      LangChain agents, CrewAI agents) that can reliably bound a single
+      agent invocation.
+
+      If instrumentation can only measure a single provider-facing client
+      operation (for example, one model API call),
+      `gen_ai.client.operation.duration` SHOULD be used instead. If
+      instrumentation can reliably bound a higher-level workflow that
+      coordinates multiple agents, `gen_ai.workflow.duration` SHOULD be
+      used for that workflow. Instrumentation MAY emit several of these
+      metrics for the same request path when more than one boundary is
+      available.
+
+      When this metric is reported alongside a `gen_ai.invoke_agent` span,
+      the metric value SHOULD be the same as the span duration.
+    provenance:
+      path: ./model/gen-ai/metrics.yaml
+    stability: development
+    unit: s
   - annotations:
       code_generation:
         metric_value_type: double
@@ -20261,6 +20736,21 @@ registry:
           id: other
           stability: stable
           value: _OTHER
+    - brief: Indicates whether the effective conversation context used for this operation is a compacted view of a prior conversation.
+      examples:
+      - true
+      key: gen_ai.conversation.compacted
+      note: |
+        This attribute is a positive indicator of context compaction. Instrumentations
+        SHOULD set it to `true` only when they can reliably determine that context
+        compaction was applied. Instrumentations SHOULD NOT set it to `false`; they
+        SHOULD leave it unset otherwise.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: when available
+      stability: development
+      type: boolean
     - brief: The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
       examples:
       - conv_5j66UpCpwteGg4YSxUnt7lPY
@@ -20642,6 +21132,22 @@ registry:
       requirement_level: recommended
       stability: development
       type: double
+    - brief: |
+        The reasoning or thinking effort level requested for a GenAI model.
+      examples:
+      - low
+      - medium
+      - high
+      key: gen_ai.request.reasoning.level
+      note: |
+        The value SHOULD be the exact string value sent to the provider.
+        Semantic conventions for individual providers SHOULD document which input parameter maps to this attribute.
+      provenance:
+        path: ./model/gen-ai/registry.yaml
+      requirement_level:
+        recommended: When applicable.
+      stability: development
+      type: string
     - brief: Requests with same seed value more likely to return same result.
       examples:
       - 100
@@ -21955,103 +22461,6 @@ registry:
           id: speech
           stability: development
           value: speech
-    - brief: The Generative AI provider as identified by the client or server instrumentation.
-      key: gen_ai.provider.name
-      note: |
-        Semantic conventions for individual GenAI operations SHOULD clarify which
-        kinds of providers (e.g. inference, embeddings, retrieval, memory, hosted
-        agent providers) apply when it is not clear from context.
-
-        The attribute SHOULD be set based on the instrumentation\u0027s best knowledge
-        and may differ from the actual upstream provider. For example, a client SDK
-        may be configured against a proxy or hosting platform that transparently
-        relays requests to a different provider.
-
-        The `gen_ai.provider.name` attribute acts as a discriminator that
-        identifies the GenAI telemetry format flavor specific to that provider
-        within GenAI semantic conventions.
-        It SHOULD be set consistently with provider-specific attributes and signals.
-        For example, GenAI spans, metrics, and events related to AWS Bedrock
-        should have the `gen_ai.provider.name` set to `aws.bedrock` and include
-        applicable `aws.bedrock.*` attributes and are not expected to include
-        `openai.*` attributes.
-      provenance:
-        path: ./model/gen-ai/registry.yaml
-      requirement_level: required
-      sampling_relevant: true
-      stability: development
-      type:
-        members:
-        - brief: \u0027[OpenAI](https://openai.com/)\u0027
-          id: openai
-          stability: development
-          value: openai
-        - brief: Any Google generative AI endpoint
-          id: gcp.gen_ai
-          note: |
-            May be used when specific backend is unknown.
-          stability: development
-          value: gcp.gen_ai
-        - brief: \u0027[Vertex AI](https://cloud.google.com/vertex-ai)\u0027
-          id: gcp.vertex_ai
-          note: |
-            Used when accessing the \u0027aiplatform.googleapis.com\u0027 endpoint.
-          stability: development
-          value: gcp.vertex_ai
-        - brief: \u0027[Gemini](https://cloud.google.com/products/gemini)\u0027
-          id: gcp.gemini
-          note: |
-            Used when accessing the \u0027generativelanguage.googleapis.com\u0027 endpoint. Also known as the AI Studio API.
-          stability: development
-          value: gcp.gemini
-        - brief: \u0027[Anthropic](https://www.anthropic.com/)\u0027
-          id: anthropic
-          stability: development
-          value: anthropic
-        - brief: \u0027[Cohere](https://cohere.com/)\u0027
-          id: cohere
-          stability: development
-          value: cohere
-        - brief: Azure AI Inference
-          id: azure.ai.inference
-          stability: development
-          value: azure.ai.inference
-        - brief: \u0027[Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview)\u0027
-          id: azure.ai.openai
-          stability: development
-          value: azure.ai.openai
-        - brief: \u0027[IBM Watsonx AI](https://www.ibm.com/products/watsonx-ai)\u0027
-          id: ibm.watsonx.ai
-          stability: development
-          value: ibm.watsonx.ai
-        - brief: \u0027[AWS Bedrock](https://aws.amazon.com/bedrock)\u0027
-          id: aws.bedrock
-          stability: development
-          value: aws.bedrock
-        - brief: \u0027[Perplexity](https://www.perplexity.ai/)\u0027
-          id: perplexity
-          stability: development
-          value: perplexity
-        - brief: \u0027[xAI](https://x.ai/)\u0027
-          id: x_ai
-          stability: development
-          value: x_ai
-        - brief: \u0027[DeepSeek](https://www.deepseek.com/)\u0027
-          id: deepseek
-          stability: development
-          value: deepseek
-        - brief: \u0027[Groq](https://groq.com/)\u0027
-          id: groq
-          stability: development
-          value: groq
-        - brief: \u0027[Mistral AI](https://mistral.ai/)\u0027
-          id: mistral_ai
-          stability: development
-          value: mistral_ai
-        - brief: \u0027[Moonshot AI](https://www.moonshot.ai/)\u0027
-          id: moonshot_ai
-          stability: development
-          value: moonshot_ai
     - brief: The target number of candidate completions to return.
       examples:
       - 3
