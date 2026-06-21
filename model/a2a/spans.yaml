@@ -13,9 +13,8 @@ spans:
 
       **Span name** SHOULD be `{a2a.method.name}`.
 
-      **Span status** SHOULD be set to `ERROR` if the request didn't complete
-      successfully. The status description SHOULD match the protocol error
-      message.
+      **Span status** SHOULD be set to `ERROR` when `error.type` attribute is
+      present. The status description SHOULD match the protocol error message.
 
       A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
       when the A2A method invokes an agent. In that case, instrumentation
@@ -52,9 +51,8 @@ spans:
 
       **Span name** SHOULD be `{a2a.method.name}`.
 
-      **Span status** SHOULD be set to `ERROR` if the request didn't complete
-      successfully. The status description SHOULD match the protocol error
-      message.
+      **Span status** SHOULD be set to `ERROR` when `error.type` attribute is
+      present. The status description SHOULD match the protocol error message.
 
       HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
       request. A2A conventions describe the logical A2A request and task

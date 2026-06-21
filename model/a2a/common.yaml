@@ -10,8 +10,11 @@ attribute_groups:
           conditionally_required: If and only if the operation fails.
         note: |
           This attribute SHOULD be set to the string representation of the
-          JSON-RPC error code when a JSON-RPC error is returned, or to the
-          gRPC status code when a gRPC error is returned.
+          JSON-RPC error code or gRPC status code, if one is returned.
+
+          When the RPC call is successful, but an error is returned within the
+          A2A result payload, this attribute SHOULD be set to the low-cardinality
+          string representation of the error.
       - ref: a2a.protocol.version
       - ref: a2a.protocol.binding
         requirement_level: recommended

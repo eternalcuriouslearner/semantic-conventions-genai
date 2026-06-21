@@ -45,9 +45,8 @@ calls and the time to consume the response stream for streaming calls.
 
 **Span name** SHOULD be `{a2a.method.name}`.
 
-**Span status** SHOULD be set to `ERROR` if the request didn't complete
-successfully. The status description SHOULD match the protocol error
-message.
+**Span status** SHOULD be set to `ERROR` when `error.type` attribute is
+present. The status description SHOULD match the protocol error message.
 
 A2A spans are compatible with GenAI [invoke agent spans](/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)
 when the A2A method invokes an agent. In that case, instrumentation
@@ -94,8 +93,11 @@ lifecycle.
 **[1] `a2a.task.state`:** When the A2A response or event contains task state.
 
 **[2] `error.type`:** This attribute SHOULD be set to the string representation of the
-JSON-RPC error code when a JSON-RPC error is returned, or to the
-gRPC status code when a gRPC error is returned.
+JSON-RPC error code or gRPC status code, if one is returned.
+
+When the RPC call is successful, but an error is returned within the
+A2A result payload, this attribute SHOULD be set to the low-cardinality
+string representation of the error.
 
 **[3] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
@@ -302,9 +304,8 @@ calls and the time to produce the response stream for streaming calls.
 
 **Span name** SHOULD be `{a2a.method.name}`.
 
-**Span status** SHOULD be set to `ERROR` if the request didn't complete
-successfully. The status description SHOULD match the protocol error
-message.
+**Span status** SHOULD be set to `ERROR` when `error.type` attribute is
+present. The status description SHOULD match the protocol error message.
 
 HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
 request. A2A conventions describe the logical A2A request and task
@@ -346,8 +347,11 @@ lifecycle.
 **[1] `a2a.task.state`:** When the A2A response or event contains task state.
 
 **[2] `error.type`:** This attribute SHOULD be set to the string representation of the
-JSON-RPC error code when a JSON-RPC error is returned, or to the
-gRPC status code when a gRPC error is returned.
+JSON-RPC error code or gRPC status code, if one is returned.
+
+When the RPC call is successful, but an error is returned within the
+A2A result payload, this attribute SHOULD be set to the low-cardinality
+string representation of the error.
 
 **[3] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
