@@ -62,7 +62,7 @@ lifecycle.
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
+| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `SendMessage`; `SendStreamingMessage`; `GetTask` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
@@ -146,7 +146,7 @@ Semantic conventions for individual RPC frameworks SHOULD document what `rpc.res
 
 **[14] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[15] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `message/send` or `message/stream`.
+**[15] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `SendMessage` or `SendStreamingMessage`.
 
 **[16] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 
@@ -172,17 +172,17 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `agent/getExtendedCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/create` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/subscribe` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `CancelTask` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `CreateTaskPushNotificationConfig` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `DeleteTaskPushNotificationConfig` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetExtendedAgentCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetTask` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetTaskPushNotificationConfig` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `ListTaskPushNotificationConfigs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `ListTasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SendMessage` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SendStreamingMessage` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SubscribeToTask` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
@@ -317,7 +317,7 @@ lifecycle.
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `message/send`; `message/stream`; `tasks/get` |
+| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `SendMessage`; `SendStreamingMessage`; `GetTask` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
@@ -424,17 +424,17 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `agent/getExtendedCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/send` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `message/stream` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/create` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/delete` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/get` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `taskPushNotificationConfigs/list` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/cancel` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/get` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/list` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `tasks/subscribe` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `CancelTask` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `CreateTaskPushNotificationConfig` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `DeleteTaskPushNotificationConfig` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetExtendedAgentCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetTask` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `GetTaskPushNotificationConfig` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `ListTaskPushNotificationConfigs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `ListTasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SendMessage` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SendStreamingMessage` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `SubscribeToTask` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 

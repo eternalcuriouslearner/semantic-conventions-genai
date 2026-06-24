@@ -101,9 +101,9 @@ def _set_task_response_attrs(span, task_id, task_state, context_id, artifact_ids
 
 
 async def run_message_send_reference() -> None:
-    """Scenario: A2A JSON-RPC message/send with a task response."""
-    print("  [message_send] A2A JSON-RPC message/send")
-    method = "message/send"
+    """Scenario: A2A JSON-RPC SendMessage with a task response."""
+    print("  [message_send] A2A JSON-RPC SendMessage")
+    method = "SendMessage"
     observed_requests = {}
     reference_task_ids = ["task-calendar-summary"]
     request = a2a_types.SendMessageRequest(
@@ -138,9 +138,9 @@ async def run_message_send_reference() -> None:
 
 
 async def run_message_stream_reference() -> None:
-    """Scenario: A2A JSON-RPC message/stream with SSE task status events."""
-    print("  [message_stream] A2A JSON-RPC message/stream")
-    method = "message/stream"
+    """Scenario: A2A JSON-RPC SendStreamingMessage with SSE task status events."""
+    print("  [message_stream] A2A JSON-RPC SendStreamingMessage")
+    method = "SendStreamingMessage"
     observed_requests = {}
     request = a2a_types.SendMessageRequest(
         message=_message(
@@ -175,9 +175,9 @@ async def run_message_stream_reference() -> None:
 
 
 async def run_tasks_get_reference() -> None:
-    """Scenario: A2A JSON-RPC tasks/get."""
-    print("  [tasks_get] A2A JSON-RPC tasks/get")
-    method = "tasks/get"
+    """Scenario: A2A JSON-RPC GetTask."""
+    print("  [tasks_get] A2A JSON-RPC GetTask")
+    method = "GetTask"
     observed_requests = {}
     request = a2a_types.GetTaskRequest(
         id="task-calendar-summary",

@@ -4,59 +4,59 @@ attributes:
     type:
       members:
         - id: message_send
-          value: message/send
+          value: SendMessage
           brief: >
             Request to send a message to an agent and receive a non-streaming
             response.
           stability: development
         - id: message_stream
-          value: message/stream
+          value: SendStreamingMessage
           brief: >
             Request to send a message to an agent and receive a streaming
             response.
           stability: development
         - id: tasks_get
-          value: tasks/get
+          value: GetTask
           brief: >
             Request to get the current state of a task.
           stability: development
         - id: tasks_cancel
-          value: tasks/cancel
+          value: CancelTask
           brief: >
             Request to cancel a task.
           stability: development
         - id: tasks_subscribe
-          value: tasks/subscribe
+          value: SubscribeToTask
           brief: >
             Request to subscribe to task updates.
           stability: development
         - id: tasks_list
-          value: tasks/list
+          value: ListTasks
           brief: >
             Request to list tasks.
           stability: development
         - id: task_push_notification_configs_create
-          value: taskPushNotificationConfigs/create
+          value: CreateTaskPushNotificationConfig
           brief: >
             Request to create or update a task push notification configuration.
           stability: development
         - id: task_push_notification_configs_get
-          value: taskPushNotificationConfigs/get
+          value: GetTaskPushNotificationConfig
           brief: >
             Request to get a task push notification configuration.
           stability: development
         - id: task_push_notification_configs_list
-          value: taskPushNotificationConfigs/list
+          value: ListTaskPushNotificationConfigs
           brief: >
             Request to list task push notification configurations.
           stability: development
         - id: task_push_notification_configs_delete
-          value: taskPushNotificationConfigs/delete
+          value: DeleteTaskPushNotificationConfig
           brief: >
             Request to delete a task push notification configuration.
           stability: development
         - id: agent_get_extended_card
-          value: agent/getExtendedCard
+          value: GetExtendedAgentCard
           brief: >
             Request to get the extended agent card.
           stability: development
