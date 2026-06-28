@@ -15,8 +15,8 @@ linkTitle: Agent2Agent Protocol
 
 <!-- tocstop -->
 
-[Agent2Agent Protocol](https://a2a-protocol.org/) (A2A) enables agents to
-communicate across vendors and frameworks.
+[Agent2Agent Protocol](https://a2a-protocol.org/latest/specification/) (A2A)
+enables agents to communicate across vendors and frameworks.
 
 HTTP conventions describe the transport request. A2A conventions describe the
 logical A2A request, method, task lifecycle, context correlation, and streaming
