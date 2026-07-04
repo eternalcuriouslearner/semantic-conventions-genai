@@ -59,6 +59,12 @@ attribute_groups:
   - id: a2a.server.address_and_port.attributes
     visibility: internal
     attributes:
+      - ref: server.address
+        requirement_level:
+          recommended: If applicable.
+      - ref: server.port
+        requirement_level:
+          recommended: When `server.address` is set.
       - ref: client.address
         requirement_level:
           recommended: If applicable.
