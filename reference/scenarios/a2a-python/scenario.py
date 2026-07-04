@@ -1,7 +1,6 @@
 """Reference implementation for A2A Python SDK."""
 
 import asyncio
-import json
 import os
 
 import httpx
@@ -51,16 +50,8 @@ def _task_state_value(state: int) -> str:
     }.get(state, "unspecified")
 
 
-def _capture_jsonrpc_request(observed_requests: dict[str, str]):
-    async def capture_request(request: httpx.Request) -> None:
-        payload = json.loads(request.content.decode("utf-8"))
-        observed_requests[payload["method"]] = str(payload["id"])
-
-    return capture_request
-
-
-async def _create_a2a_client(*, streaming: bool, observed_requests: dict[str, str]):
-    httpx_client = httpx.AsyncClient(event_hooks={"request": [_capture_jsonrpc_request(observed_requests)]})
+async def _create_a2a_client(*, streaming: bool):
+    httpx_client = httpx.AsyncClient()
     card = minimal_agent_card(MOCK_A2A_URL, [TransportProtocol.JSONRPC])
     card.capabilities.streaming = streaming
     return await create_client(
@@ -85,9 +76,6 @@ def _base_span_attrs(method: str):
         "a2a.protocol.version": PROTOCOL_VERSION,
         "a2a.protocol.binding": PROTOCOL_BINDING,
         "a2a.agent.card.url": AGENT_CARD_URL,
-        "network.protocol.name": "http",
-        "network.transport": "tcp",
-        "rpc.system.name": "jsonrpc",
         **_server_attrs(),
     }
 
@@ -104,7 +92,6 @@ async def run_message_send_reference() -> None:
     """Scenario: A2A JSON-RPC SendMessage with a task response."""
     print("  [message_send] A2A JSON-RPC SendMessage")
     method = "SendMessage"
-    observed_requests = {}
     reference_task_ids = ["task-calendar-summary"]
     request = a2a_types.SendMessageRequest(
         message=_message(
@@ -122,11 +109,10 @@ async def run_message_send_reference() -> None:
         "gen_ai.operation.name": "invoke_agent",
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
+        async with await _create_a2a_client(streaming=False) as client:
             response = await anext(client.send_message(request))
         task = response.task
         task_state = _task_state_value(task.status.state)
-        span.set_attribute("jsonrpc.request.id", observed_requests["SendMessage"])
         _set_task_response_attrs(
             span,
             task.id,
@@ -141,7 +127,6 @@ async def run_message_stream_reference() -> None:
     """Scenario: A2A JSON-RPC SendStreamingMessage with SSE task status events."""
     print("  [message_stream] A2A JSON-RPC SendStreamingMessage")
     method = "SendStreamingMessage"
-    observed_requests = {}
     request = a2a_types.SendMessageRequest(
         message=_message(
             "Track this task.",
@@ -161,7 +146,7 @@ async def run_message_stream_reference() -> None:
         "gen_ai.request.stream": True,
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=True, observed_requests=observed_requests) as client:
+        async with await _create_a2a_client(streaming=True) as client:
             async for event in client.send_message(request):
                 event_count += 1
                 if event.HasField("status_update"):
@@ -169,7 +154,6 @@ async def run_message_stream_reference() -> None:
                     context_id = event.status_update.context_id
                     task_state = _task_state_value(event.status_update.status.state)
 
-        span.set_attribute("jsonrpc.request.id", observed_requests["SendStreamingMessage"])
         _set_task_response_attrs(span, task_id, task_state, context_id)
     print(f"    -> {event_count} events")
 
@@ -178,17 +162,15 @@ async def run_tasks_get_reference() -> None:
     """Scenario: A2A JSON-RPC GetTask."""
     print("  [tasks_get] A2A JSON-RPC GetTask")
     method = "GetTask"
-    observed_requests = {}
     request = a2a_types.GetTaskRequest(
         id="task-calendar-summary",
     )
 
     span_attrs = _base_span_attrs(method)
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=False, observed_requests=observed_requests) as client:
+        async with await _create_a2a_client(streaming=False) as client:
             task = await client.get_task(request)
         task_state = _task_state_value(task.status.state)
-        span.set_attribute("jsonrpc.request.id", observed_requests["GetTask"])
         _set_task_response_attrs(
             span,
             task.id,
