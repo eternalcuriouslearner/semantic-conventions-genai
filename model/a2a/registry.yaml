@@ -3,64 +3,69 @@ attributes:
   - key: a2a.method.name
     type:
       members:
-        - id: message_send
-          value: SendMessage
+        - id: send_message
+          value: send_message
           brief: >
             Request to send a message to an agent and receive a non-streaming
             response.
           stability: development
-        - id: message_stream
-          value: SendStreamingMessage
+        - id: send_streaming_message
+          value: send_streaming_message
           brief: >
             Request to send a message to an agent and receive a streaming
             response.
           stability: development
-        - id: tasks_get
-          value: GetTask
+        - id: get_task
+          value: get_task
           brief: >
             Request to get the current state of a task.
           stability: development
-        - id: tasks_cancel
-          value: CancelTask
+        - id: cancel_task
+          value: cancel_task
           brief: >
             Request to cancel a task.
           stability: development
-        - id: tasks_subscribe
-          value: SubscribeToTask
+        - id: subscribe_to_task
+          value: subscribe_to_task
           brief: >
             Request to subscribe to task updates.
           stability: development
-        - id: tasks_list
-          value: ListTasks
+        - id: list_tasks
+          value: list_tasks
           brief: >
             Request to list tasks.
           stability: development
-        - id: task_push_notification_configs_create
-          value: CreateTaskPushNotificationConfig
+        - id: create_task_push_notification_config
+          value: create_task_push_notification_config
           brief: >
             Request to create or update a task push notification configuration.
           stability: development
-        - id: task_push_notification_configs_get
-          value: GetTaskPushNotificationConfig
+        - id: get_task_push_notification_config
+          value: get_task_push_notification_config
           brief: >
             Request to get a task push notification configuration.
           stability: development
-        - id: task_push_notification_configs_list
-          value: ListTaskPushNotificationConfigs
+        - id: list_task_push_notification_configs
+          value: list_task_push_notification_configs
           brief: >
             Request to list task push notification configurations.
           stability: development
-        - id: task_push_notification_configs_delete
-          value: DeleteTaskPushNotificationConfig
+        - id: delete_task_push_notification_config
+          value: delete_task_push_notification_config
           brief: >
             Request to delete a task push notification configuration.
           stability: development
-        - id: agent_get_extended_card
-          value: GetExtendedAgentCard
+        - id: get_extended_agent_card
+          value: get_extended_agent_card
           brief: >
             Request to get the extended agent card.
           stability: development
     brief: The name of the A2A request method.
+    note: >
+      This attribute records the semconv-normalized, binding-independent name
+      of the high-level A2A operation. The concrete method name on the wire
+      depends on the protocol binding, for example `message/send` for JSON-RPC,
+      `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
     stability: development
   - key: a2a.protocol.version
     type: string

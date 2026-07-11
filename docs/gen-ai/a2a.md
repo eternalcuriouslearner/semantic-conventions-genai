@@ -58,47 +58,49 @@ lifecycle.
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `SendMessage`; `SendStreamingMessage`; `GetTask` |
+| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. [1] | `send_message`; `send_streaming_message`; `get_task` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [2] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [3] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [4] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
+| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [3] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [5] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. | |
 | [`a2a.agent.card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. | `https://a2a-protocol.org/example/a2a/v1/card` |
-| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [5] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
-| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [6] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
+| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [6] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
+| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [7] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
 | [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | IDs of artifacts that the A2A task produced. | `["art-001", "art-002"]` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [7] | string | The name of the GenAI operation being performed. [8] | `invoke_agent` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [10] | `80`; `8080`; `443` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [8] | string | The name of the GenAI operation being performed. [9] | `invoke_agent` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [10] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [11] | `80`; `8080`; `443` |
 
-**[1] `a2a.task.state`:** When the A2A response or event contains task state.
+**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. The concrete method name on the wire depends on the protocol binding, for example `message/send` for JSON-RPC, `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
 
-**[2] `error.type`:** This attribute SHOULD be set to the string representation of the
+**[2] `a2a.task.state`:** When the A2A response or event contains task state.
+
+**[3] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
 
 When the RPC call is successful, but an error is returned within the
 A2A result payload, this attribute SHOULD be set to the low-cardinality
 string representation of the error.
 
-**[3] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
+**[4] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[4] `gen_ai.conversation.id`:** This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
+**[5] `gen_ai.conversation.id`:** This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
 
-**[5] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
+**[6] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
 
-**[6] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
+**[7] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[7] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `SendMessage` or `SendStreamingMessage`.
+**[8] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `send_message` or `send_streaming_message`.
 
-**[8] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[9] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 
-**[9] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[10] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[10] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[11] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -106,17 +108,17 @@ string representation of the error.
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `CancelTask` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `CreateTaskPushNotificationConfig` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `DeleteTaskPushNotificationConfig` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetExtendedAgentCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetTask` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetTaskPushNotificationConfig` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `ListTaskPushNotificationConfigs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `ListTasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SendMessage` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SendStreamingMessage` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SubscribeToTask` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `cancel_task` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `create_task_push_notification_config` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `delete_task_push_notification_config` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_extended_agent_card` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_task` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_task_push_notification_config` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `list_task_push_notification_configs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `list_tasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `send_message` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `send_streaming_message` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `subscribe_to_task` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
@@ -210,50 +212,52 @@ lifecycle.
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- | --- |
-| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. | `SendMessage`; `SendStreamingMessage`; `GetTask` |
+| [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. [1] | `send_message`; `send_streaming_message`; `get_task` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. | `task-5f2a7c7d9f8e4d2a` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [1] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [2] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [3] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [4] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [2] | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
+| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [3] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [5] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. | |
-| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [5] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
-| [`a2a.protocol.activated_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [6] | string[] | Protocol extensions successfully activated by the server for this request. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
-| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [7] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
+| [`a2a.message.referenced_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [6] | string[] | Task IDs referenced or linked in the A2A request message. | `["task-abc-5678"]` |
+| [`a2a.protocol.activated_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [7] | string[] | Protocol extensions successfully activated by the server for this request. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
+| [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [8] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. | `1.0` |
 | [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | IDs of artifacts that the A2A task produced. | `["art-001", "art-002"]` |
-| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [8] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [9] | `65123` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [10] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.42.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [11] | `80`; `8080`; `443` |
+| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [9] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [10] | `65123` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [11] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [12] | `80`; `8080`; `443` |
 
-**[1] `a2a.task.state`:** When the A2A response or event contains task state.
+**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. The concrete method name on the wire depends on the protocol binding, for example `message/send` for JSON-RPC, `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
 
-**[2] `error.type`:** This attribute SHOULD be set to the string representation of the
+**[2] `a2a.task.state`:** When the A2A response or event contains task state.
+
+**[3] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
 
 When the RPC call is successful, but an error is returned within the
 A2A result payload, this attribute SHOULD be set to the low-cardinality
 string representation of the error.
 
-**[3] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
+**[4] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[4] `gen_ai.conversation.id`:** This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
+**[5] `gen_ai.conversation.id`:** This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation.
 
-**[5] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
+**[6] `a2a.message.referenced_task_ids`:** When the request message references or links task IDs.
 
-**[6] `a2a.protocol.activated_extensions`:** When the server activates protocol extensions for the request.
+**[7] `a2a.protocol.activated_extensions`:** When the server activates protocol extensions for the request.
 
-**[7] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
+**[8] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 
-**[8] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
+**[9] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
 
-**[9] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
+**[10] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
 
-**[10] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[11] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[11] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[12] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -261,17 +265,17 @@ string representation of the error.
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `CancelTask` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `CreateTaskPushNotificationConfig` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `DeleteTaskPushNotificationConfig` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetExtendedAgentCard` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetTask` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `GetTaskPushNotificationConfig` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `ListTaskPushNotificationConfigs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `ListTasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SendMessage` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SendStreamingMessage` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `SubscribeToTask` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `cancel_task` | Request to cancel a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `create_task_push_notification_config` | Request to create or update a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `delete_task_push_notification_config` | Request to delete a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_extended_agent_card` | Request to get the extended agent card. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_task` | Request to get the current state of a task. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `get_task_push_notification_config` | Request to get a task push notification configuration. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `list_task_push_notification_configs` | Request to list task push notification configurations. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `list_tasks` | Request to list tasks. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `send_message` | Request to send a message to an agent and receive a non-streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `send_streaming_message` | Request to send a message to an agent and receive a streaming response. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `subscribe_to_task` | Request to subscribe to task updates. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
