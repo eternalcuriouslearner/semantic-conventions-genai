@@ -75,7 +75,7 @@ lifecycle.
 | [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [10] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
 | [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [11] | `80`; `8080`; `443` |
 
-**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. The concrete method name on the wire depends on the protocol binding, for example `message/send` for JSON-RPC, `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
+**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
 
 **[2] `a2a.task.state`:** When the A2A response or event contains task state.
 
@@ -230,7 +230,7 @@ lifecycle.
 | [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [11] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
 | [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [12] | `80`; `8080`; `443` |
 
-**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. The concrete method name on the wire depends on the protocol binding, for example `message/send` for JSON-RPC, `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
+**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
 
 **[2] `a2a.task.state`:** When the A2A response or event contains task state.
 

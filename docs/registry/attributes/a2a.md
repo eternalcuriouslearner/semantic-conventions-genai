@@ -20,7 +20,7 @@
 | <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. | `submitted`; `working`; `input-required` |
 
 
-**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. The concrete method name on the wire depends on the protocol binding, for example `message/send` for JSON-RPC, `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
+**[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
 
 **[2] `a2a.protocol.binding`:** The well-known values match the transport protocol identifiers defined by the [A2A specification](https://a2a-protocol.org/latest/specification/).
 

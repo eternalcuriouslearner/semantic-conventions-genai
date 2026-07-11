@@ -63,9 +63,9 @@ attributes:
     brief: The name of the A2A request method.
     note: >
       This attribute records the semconv-normalized, binding-independent name
-      of the high-level A2A operation. The concrete method name on the wire
-      depends on the protocol binding, for example `message/send` for JSON-RPC,
-      `SendMessage` for gRPC, and `POST /v1/message:send` for HTTP+JSON.
+      of the high-level A2A operation. For example, `send_message` corresponds
+      to the A2A `SendMessage` operation. In the current A2A specification,
+      JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
     stability: development
   - key: a2a.protocol.version
     type: string
