@@ -112,9 +112,9 @@ attributes:
       object.
     examples: ["msg-user-1234"]
     stability: development
-  - key: a2a.message.referenced_task_ids
+  - key: a2a.message.reference_task_ids
     type: string[]
-    brief: Task IDs referenced or linked in the A2A request message.
+    brief: Task IDs referenced by the A2A request message.
     note: >
       See the A2A specification for the
       [Message](https://a2a-protocol.org/latest/specification/#414-message)

@@ -104,7 +104,7 @@ async def run_message_send_reference() -> None:
     span_attrs = {
         **_base_span_attrs(method),
         "a2a.message.id": "msg-user-1",
-        "a2a.message.referenced_task_ids": reference_task_ids,
+        "a2a.message.reference_task_ids": reference_task_ids,
         "a2a.protocol.requested_extensions": REQUESTED_EXTENSIONS,
         "gen_ai.operation.name": "invoke_agent",
     }

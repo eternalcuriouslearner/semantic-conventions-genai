@@ -26,9 +26,9 @@ attribute_groups:
       - ref: a2a.message.id
         requirement_level:
           conditionally_required: When the A2A request contains a message.
-      - ref: a2a.message.referenced_task_ids
+      - ref: a2a.message.reference_task_ids
         requirement_level:
-          recommended: When the request message references or links task IDs.
+          recommended: When the request message references task IDs.
       - ref: a2a.task.id
         requirement_level:
           conditionally_required: When the A2A request or response is task-scoped.

@@ -9,7 +9,7 @@
 | --- | --- | --- | --- | --- |
 | <a id="a2a-agent-card-url" href="#a2a-agent-card-url">`a2a.agent.card.url`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The endpoint URL of the target A2A agent's Agent Card. [1] | `https://a2a-protocol.org/example/a2a/v1/card` |
 | <a id="a2a-message-id" href="#a2a-message-id">`a2a.message.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
-| <a id="a2a-message-referenced-task-ids" href="#a2a-message-referenced-task-ids">`a2a.message.referenced_task_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Task IDs referenced or linked in the A2A request message. [3] | `["task-abc-5678"]` |
+| <a id="a2a-message-reference-task-ids" href="#a2a-message-reference-task-ids">`a2a.message.reference_task_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Task IDs referenced by the A2A request message. [3] | `["task-abc-5678"]` |
 | <a id="a2a-method-name" href="#a2a-method-name">`a2a.method.name`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The name of the A2A request method. [4] | `send_message`; `send_streaming_message`; `get_task` |
 | <a id="a2a-protocol-activated-extensions" href="#a2a-protocol-activated-extensions">`a2a.protocol.activated_extensions`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Protocol extensions successfully activated by the server for this request. [5] | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | <a id="a2a-protocol-binding" href="#a2a-protocol-binding">`a2a.protocol.binding`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The underlying transport or transport binding used. [6] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
@@ -24,7 +24,7 @@
 
 **[2] `a2a.message.id`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
-**[3] `a2a.message.referenced_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
+**[3] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
 **[4] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`. See the A2A specification for [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations) and [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
 
