@@ -15,6 +15,11 @@ attribute_groups:
           When the RPC call is successful, but an error is returned within the
           A2A result payload, this attribute SHOULD be set to the low-cardinality
           string representation of the error.
+
+          See the A2A specification for
+          [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)
+          and
+          [error code mappings](https://a2a-protocol.org/latest/specification/#54-error-code-mappings).
       - ref: a2a.protocol.version
       - ref: a2a.protocol.binding
         requirement_level: recommended
@@ -41,10 +46,17 @@ attribute_groups:
           conditionally_required: When the A2A request or response contains context id.
         note: >
           This attribute SHOULD be set to the value of the A2A `contextId`
-          protocol field to allow cross-GenAI correlation.
+          protocol field to allow cross-GenAI correlation. See the A2A
+          specification for
+          [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
       - ref: gen_ai.request.stream
         requirement_level:
           conditionally_required: If and only if the A2A request is streaming.
+        note: >
+          See the A2A specification for
+          [Send Streaming Message](https://a2a-protocol.org/latest/specification/#312-send-streaming-message)
+          and
+          [streaming event delivery](https://a2a-protocol.org/latest/specification/#352-streaming-event-delivery).
 
   - id: a2a.client.address_and_port.attributes
     visibility: internal

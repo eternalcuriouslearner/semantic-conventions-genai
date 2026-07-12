@@ -66,10 +66,17 @@ attributes:
       of the high-level A2A operation. For example, `send_message` corresponds
       to the A2A `SendMessage` operation. In the current A2A specification,
       JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
+      See the A2A specification for
+      [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations)
+      and
+      [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
     stability: development
   - key: a2a.protocol.version
     type: string
     brief: The version of the A2A protocol used.
+    note: >
+      See the A2A specification for
+      [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
     examples: ["1.0"]
     stability: development
   - key: a2a.protocol.binding
@@ -93,45 +100,75 @@ attributes:
     brief: The underlying transport or transport binding used.
     note: >
       The well-known values match the transport protocol identifiers defined
-      by the [A2A specification](https://a2a-protocol.org/latest/specification/).
+      by the A2A specification for
+      [protocol bindings](https://a2a-protocol.org/latest/specification/#5-protocol-binding-requirements-and-interoperability).
     stability: development
   - key: a2a.message.id
     type: string
     brief: The unique identifier of the A2A message.
+    note: >
+      See the A2A specification for the
+      [Message](https://a2a-protocol.org/latest/specification/#414-message)
+      object.
     examples: ["msg-user-1234"]
     stability: development
   - key: a2a.message.referenced_task_ids
     type: string[]
     brief: Task IDs referenced or linked in the A2A request message.
+    note: >
+      See the A2A specification for the
+      [Message](https://a2a-protocol.org/latest/specification/#414-message)
+      object.
     examples:
       - [task-abc-5678]
     stability: development
   - key: a2a.task.artifact_ids
     type: string[]
     brief: IDs of artifacts that the A2A task produced.
+    note: >
+      See the A2A specification for the
+      [Artifact](https://a2a-protocol.org/latest/specification/#417-artifact)
+      object.
     examples:
       - [art-001, art-002]
     stability: development
   - key: a2a.agent.card.url
     type: string
     brief: The endpoint URL of the target A2A agent's Agent Card.
+    note: >
+      See the A2A specification for
+      [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card)
+      and the
+      [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard)
+      object.
     examples: ["https://a2a-protocol.org/example/a2a/v1/card"]
     stability: development
   - key: a2a.protocol.requested_extensions
     type: string[]
     brief: Protocol extensions requested by the client.
+    note: >
+      See the A2A specification for
+      [extensions](https://a2a-protocol.org/latest/specification/#46-extensions).
     examples:
       - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
     stability: development
   - key: a2a.protocol.activated_extensions
     type: string[]
     brief: Protocol extensions successfully activated by the server for this request.
+    note: >
+      See the A2A specification for
+      [extensions](https://a2a-protocol.org/latest/specification/#46-extensions).
     examples:
       - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
     stability: development
   - key: a2a.task.id
     type: string
     brief: The unique identifier of an A2A task.
+    note: >
+      See the A2A specification for the
+      [Task](https://a2a-protocol.org/latest/specification/#411-task)
+      object and
+      [task identifier semantics](https://a2a-protocol.org/latest/specification/#342-task-identifier-semantics).
     examples: ["task-5f2a7c7d9f8e4d2a"]
     stability: development
   - key: a2a.task.state
@@ -183,4 +220,7 @@ attributes:
             The task state is unspecified.
           stability: development
     brief: The state of an A2A task.
+    note: >
+      See the A2A specification for
+      [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
     stability: development
