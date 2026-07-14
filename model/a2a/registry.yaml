@@ -122,16 +122,6 @@ attributes:
     examples:
       - [task-abc-5678]
     stability: development
-  - key: a2a.task.artifact_ids
-    type: string[]
-    brief: IDs of artifacts that the A2A task produced.
-    note: >
-      See the A2A specification for the
-      [Artifact](https://a2a-protocol.org/latest/specification/#417-artifact)
-      object.
-    examples:
-      - [art-001, art-002]
-    stability: development
   - key: a2a.agent_card.url
     type: string
     brief: The endpoint URL of the target A2A agent's Agent Card.

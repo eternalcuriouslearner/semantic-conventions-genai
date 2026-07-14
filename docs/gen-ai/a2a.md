@@ -65,15 +65,14 @@ lifecycle.
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
 | [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. [9] | |
-| [`a2a.agent.card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [10] | `https://a2a-protocol.org/example/a2a/v1/card` |
+| [`a2a.agent_card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [10] | `https://a2a-protocol.org/example/a2a/v1/card` |
 | [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [11] | `["task-abc-5678"]` |
 | [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [12] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. [13] | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [14] | `1.0` |
-| [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | IDs of artifacts that the A2A task produced. [15] | `["art-001", "art-002"]` |
-| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [16] | string | The name of the GenAI operation being performed. [17] | `invoke_agent` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [18] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [19] | `80`; `8080`; `443` |
+| [`gen_ai.operation.name`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` [15] | string | The name of the GenAI operation being performed. [16] | `invoke_agent` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [17] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [18] | `80`; `8080`; `443` |
 
 **[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`. See the A2A specification for [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations) and [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
 
@@ -103,7 +102,7 @@ and
 
 **[9] `gen_ai.request.stream`:** See the A2A specification for [Send Streaming Message](https://a2a-protocol.org/latest/specification/#312-send-streaming-message) and [streaming event delivery](https://a2a-protocol.org/latest/specification/#352-streaming-event-delivery).
 
-**[10] `a2a.agent.card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
+**[10] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
 
 **[11] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
@@ -113,15 +112,13 @@ and
 
 **[14] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
 
-**[15] `a2a.task.artifact_ids`:** See the A2A specification for the [Artifact](https://a2a-protocol.org/latest/specification/#417-artifact) object.
+**[15] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `send_message` or `send_streaming_message`.
 
-**[16] `gen_ai.operation.name`:** SHOULD be set to `invoke_agent` when the A2A method invokes an agent, such as `send_message` or `send_streaming_message`.
+**[16] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 
-**[17] `gen_ai.operation.name`:** If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+**[17] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[18] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[19] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[18] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -245,11 +242,10 @@ lifecycle.
 | [`a2a.protocol.binding`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The underlying transport or transport binding used. [13] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | [`a2a.protocol.requested_extensions`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the client requests protocol extensions. | string[] | Protocol extensions requested by the client. [14] | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [15] | `1.0` |
-| [`a2a.task.artifact_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the task response contains artifacts. | string[] | IDs of artifacts that the A2A task produced. [16] | `["art-001", "art-002"]` |
-| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [17] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [18] | `65123` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [19] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [20] | `80`; `8080`; `443` |
+| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [16] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [17] | `65123` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [18] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [19] | `80`; `8080`; `443` |
 
 **[1] `a2a.method.name`:** This attribute records the semconv-normalized, binding-independent name of the high-level A2A operation. For example, `send_message` corresponds to the A2A `SendMessage` operation. In the current A2A specification, JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`. See the A2A specification for [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations) and [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
 
@@ -291,15 +287,13 @@ and
 
 **[15] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
 
-**[16] `a2a.task.artifact_ids`:** See the A2A specification for the [Artifact](https://a2a-protocol.org/latest/specification/#417-artifact) object.
+**[16] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
 
-**[17] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
+**[17] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
 
-**[18] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
+**[18] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[19] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-
-**[20] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[19] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 

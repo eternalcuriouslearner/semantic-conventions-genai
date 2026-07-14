@@ -75,17 +75,15 @@ def _base_span_attrs(method: str):
         "a2a.method.name": method,
         "a2a.protocol.version": PROTOCOL_VERSION,
         "a2a.protocol.binding": PROTOCOL_BINDING,
-        "a2a.agent.card.url": AGENT_CARD_URL,
+        "a2a.agent_card.url": AGENT_CARD_URL,
         **_server_attrs(),
     }
 
 
-def _set_task_response_attrs(span, task_id, task_state, context_id, artifact_ids=None):
+def _set_task_response_attrs(span, task_id, task_state, context_id):
     span.set_attribute("a2a.task.id", task_id)
     span.set_attribute("a2a.task.state", task_state)
     span.set_attribute("gen_ai.conversation.id", context_id)
-    if artifact_ids:
-        span.set_attribute("a2a.task.artifact_ids", artifact_ids)
 
 
 async def run_message_send_reference() -> None:
@@ -118,7 +116,6 @@ async def run_message_send_reference() -> None:
             task.id,
             task_state,
             task.context_id,
-            [artifact.artifact_id for artifact in task.artifacts],
         )
     print(f"    -> {task.id} {task_state}")
 
@@ -176,7 +173,6 @@ async def run_tasks_get_reference() -> None:
             task.id,
             task_state,
             task.context_id,
-            [artifact.artifact_id for artifact in task.artifacts],
         )
     print(f"    -> {request.id} {task_state}")
 

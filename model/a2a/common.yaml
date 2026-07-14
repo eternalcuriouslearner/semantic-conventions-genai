@@ -35,9 +35,6 @@ attribute_groups:
       - ref: a2a.task.state
         requirement_level:
           conditionally_required: When the A2A response or event contains task state.
-      - ref: a2a.task.artifact_ids
-        requirement_level:
-          recommended: When the task response contains artifacts.
       - ref: a2a.protocol.requested_extensions
         requirement_level:
           recommended: When the client requests protocol extensions.

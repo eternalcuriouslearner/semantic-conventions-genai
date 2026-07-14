@@ -7,7 +7,7 @@
 
 | Key | Stability | Value Type | Description | Example Values |
 | --- | --- | --- | --- | --- |
-| <a id="a2a-agent-card-url" href="#a2a-agent-card-url">`a2a.agent.card.url`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The endpoint URL of the target A2A agent's Agent Card. [1] | `https://a2a-protocol.org/example/a2a/v1/card` |
+| <a id="a2a-agent-card-url" href="#a2a-agent-card-url">`a2a.agent_card.url`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The endpoint URL of the target A2A agent's Agent Card. [1] | `https://a2a-protocol.org/example/a2a/v1/card` |
 | <a id="a2a-message-id" href="#a2a-message-id">`a2a.message.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
 | <a id="a2a-message-reference-task-ids" href="#a2a-message-reference-task-ids">`a2a.message.reference_task_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Task IDs referenced by the A2A request message. [3] | `["task-abc-5678"]` |
 | <a id="a2a-method-name" href="#a2a-method-name">`a2a.method.name`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The name of the A2A request method. [4] | `send_message`; `send_streaming_message`; `get_task` |
@@ -15,12 +15,11 @@
 | <a id="a2a-protocol-binding" href="#a2a-protocol-binding">`a2a.protocol.binding`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The underlying transport or transport binding used. [6] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | <a id="a2a-protocol-requested-extensions" href="#a2a-protocol-requested-extensions">`a2a.protocol.requested_extensions`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | Protocol extensions requested by the client. [7] | `["https://a2a-protocol.org/example/extensions/auth-forward/v1"]` |
 | <a id="a2a-protocol-version" href="#a2a-protocol-version">`a2a.protocol.version`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The version of the A2A protocol used. [8] | `1.0` |
-| <a id="a2a-task-artifact-ids" href="#a2a-task-artifact-ids">`a2a.task.artifact_ids`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string[] | IDs of artifacts that the A2A task produced. [9] | `["art-001", "art-002"]` |
-| <a id="a2a-task-id" href="#a2a-task-id">`a2a.task.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of an A2A task. [10] | `task-5f2a7c7d9f8e4d2a` |
-| <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. [11] | `submitted`; `working`; `input-required` |
+| <a id="a2a-task-id" href="#a2a-task-id">`a2a.task.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of an A2A task. [9] | `task-5f2a7c7d9f8e4d2a` |
+| <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. [10] | `submitted`; `working`; `input-required` |
 
 
-**[1] `a2a.agent.card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
+**[1] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
 
 **[2] `a2a.message.id`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
@@ -36,11 +35,9 @@
 
 **[8] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
 
-**[9] `a2a.task.artifact_ids`:** See the A2A specification for the [Artifact](https://a2a-protocol.org/latest/specification/#417-artifact) object.
+**[9] `a2a.task.id`:** See the A2A specification for the [Task](https://a2a-protocol.org/latest/specification/#411-task) object and [task identifier semantics](https://a2a-protocol.org/latest/specification/#342-task-identifier-semantics).
 
-**[10] `a2a.task.id`:** See the A2A specification for the [Task](https://a2a-protocol.org/latest/specification/#411-task) object and [task identifier semantics](https://a2a-protocol.org/latest/specification/#342-task-identifier-semantics).
-
-**[11] `a2a.task.state`:** See the A2A specification for [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
+**[10] `a2a.task.state`:** See the A2A specification for [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
 
 ---
 

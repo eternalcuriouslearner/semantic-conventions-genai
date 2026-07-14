@@ -34,7 +34,7 @@ spans:
             SHOULD be set to `invoke_agent` when the A2A method invokes an
             agent, such as `send_message` or `send_streaming_message`.
       - ref_group: a2a.client.address_and_port.attributes
-      - ref: a2a.agent.card.url
+      - ref: a2a.agent_card.url
         requirement_level:
           recommended: When the target agent's Agent Card URL is known.
 
