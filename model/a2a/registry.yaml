@@ -132,7 +132,7 @@ attributes:
     examples:
       - [art-001, art-002]
     stability: development
-  - key: a2a.agent.card.url
+  - key: a2a.agent_card.url
     type: string
     brief: The endpoint URL of the target A2A agent's Agent Card.
     note: >
