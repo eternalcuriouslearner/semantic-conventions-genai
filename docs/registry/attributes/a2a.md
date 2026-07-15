@@ -14,7 +14,7 @@
 | <a id="a2a-protocol-binding" href="#a2a-protocol-binding">`a2a.protocol.binding`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The underlying transport or transport binding used. [5] | `JSONRPC`; `GRPC`; `HTTP+JSON` |
 | <a id="a2a-protocol-version" href="#a2a-protocol-version">`a2a.protocol.version`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The version of the A2A protocol used. [6] | `1.0` |
 | <a id="a2a-task-id" href="#a2a-task-id">`a2a.task.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of an A2A task. [7] | `task-5f2a7c7d9f8e4d2a` |
-| <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. [8] | `submitted`; `working`; `input-required` |
+| <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. [8] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 
 
 **[1] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
@@ -67,12 +67,12 @@
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unspecified` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_AUTH_REQUIRED` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_CANCELED` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_COMPLETED` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_FAILED` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_INPUT_REQUIRED` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_REJECTED` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_SUBMITTED` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_UNSPECIFIED` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_WORKING` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |

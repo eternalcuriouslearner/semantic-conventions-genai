@@ -146,48 +146,48 @@ attributes:
   - key: a2a.task.state
     type:
       members:
-        - id: submitted
-          value: submitted
+        - id: task_state_submitted
+          value: TASK_STATE_SUBMITTED
           brief: >
             The task has been submitted.
           stability: development
-        - id: working
-          value: working
+        - id: task_state_working
+          value: TASK_STATE_WORKING
           brief: >
             The task is being processed.
           stability: development
-        - id: input_required
-          value: input-required
+        - id: task_state_input_required
+          value: TASK_STATE_INPUT_REQUIRED
           brief: >
             The task requires additional input.
           stability: development
-        - id: completed
-          value: completed
+        - id: task_state_completed
+          value: TASK_STATE_COMPLETED
           brief: >
             The task completed successfully.
           stability: development
-        - id: canceled
-          value: canceled
+        - id: task_state_canceled
+          value: TASK_STATE_CANCELED
           brief: >
             The task was canceled.
           stability: development
-        - id: failed
-          value: failed
+        - id: task_state_failed
+          value: TASK_STATE_FAILED
           brief: >
             The task failed.
           stability: development
-        - id: rejected
-          value: rejected
+        - id: task_state_rejected
+          value: TASK_STATE_REJECTED
           brief: >
             The task was rejected.
           stability: development
-        - id: auth_required
-          value: auth-required
+        - id: task_state_auth_required
+          value: TASK_STATE_AUTH_REQUIRED
           brief: >
             The task requires authentication.
           stability: development
-        - id: unspecified
-          value: unspecified
+        - id: task_state_unspecified
+          value: TASK_STATE_UNSPECIFIED
           brief: >
             The task state is unspecified.
           stability: development

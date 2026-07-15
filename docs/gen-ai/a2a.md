@@ -54,6 +54,8 @@ lifecycle.
 
 **Span kind** SHOULD be `CLIENT`.
 
+**Requirement level:** [Recommended](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/signal-requirement-level.md).
+
 **Attributes:**
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
@@ -61,7 +63,7 @@ lifecycle.
 | [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. [1] | `send_message`; `send_streaming_message`; `get_task` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `submitted`; `working`; `input-required` |
+| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
 | [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. [9] | |
@@ -151,15 +153,15 @@ and
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unspecified` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_AUTH_REQUIRED` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_CANCELED` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_COMPLETED` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_FAILED` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_INPUT_REQUIRED` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_REJECTED` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_SUBMITTED` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_UNSPECIFIED` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_WORKING` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 
@@ -223,6 +225,8 @@ lifecycle.
 
 **Span kind** SHOULD be `SERVER`.
 
+**Requirement level:** [Recommended](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/signal-requirement-level.md).
+
 **Attributes:**
 
 | Key | Stability | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Value Type | Description | Example Values |
@@ -230,7 +234,7 @@ lifecycle.
 | [`a2a.method.name`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Required` | string | The name of the A2A request method. [1] | `send_message`; `send_streaming_message`; `get_task` |
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
-| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `submitted`; `working`; `input-required` |
+| [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
 | [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. [9] | |
@@ -318,15 +322,15 @@ and
 
 | Value | Description | Stability |
 | --- | --- | --- |
-| `auth-required` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `canceled` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `completed` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `failed` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `input-required` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `rejected` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `submitted` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `unspecified` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
-| `working` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_AUTH_REQUIRED` | The task requires authentication. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_CANCELED` | The task was canceled. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_COMPLETED` | The task completed successfully. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_FAILED` | The task failed. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_INPUT_REQUIRED` | The task requires additional input. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_REJECTED` | The task was rejected. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_SUBMITTED` | The task has been submitted. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_UNSPECIFIED` | The task state is unspecified. | ![Development](https://img.shields.io/badge/-development-blue) |
+| `TASK_STATE_WORKING` | The task is being processed. | ![Development](https://img.shields.io/badge/-development-blue) |
 
 ---
 

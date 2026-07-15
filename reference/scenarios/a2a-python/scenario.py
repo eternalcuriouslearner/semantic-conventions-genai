@@ -23,7 +23,6 @@ AGENT_CARD_URL = f"{MOCK_A2A_URL}/.well-known/agent-card.json"
 _reference_tracer = reference_tracer()
 
 ROLE_USER = a2a_types.Role.Value("ROLE_USER")
-TASK_STATE_COMPLETED = a2a_types.TaskState.Value("TASK_STATE_COMPLETED")
 
 
 def _message(text: str, *, message_id: str, reference_task_ids: list[str] | None = None):
@@ -36,16 +35,7 @@ def _message(text: str, *, message_id: str, reference_task_ids: list[str] | None
 
 
 def _task_state_value(state: int) -> str:
-    return {
-        TASK_STATE_COMPLETED: "completed",
-        a2a_types.TaskState.Value("TASK_STATE_SUBMITTED"): "submitted",
-        a2a_types.TaskState.Value("TASK_STATE_WORKING"): "working",
-        a2a_types.TaskState.Value("TASK_STATE_FAILED"): "failed",
-        a2a_types.TaskState.Value("TASK_STATE_CANCELED"): "canceled",
-        a2a_types.TaskState.Value("TASK_STATE_INPUT_REQUIRED"): "input-required",
-        a2a_types.TaskState.Value("TASK_STATE_REJECTED"): "rejected",
-        a2a_types.TaskState.Value("TASK_STATE_AUTH_REQUIRED"): "auth-required",
-    }.get(state, "unspecified")
+    return a2a_types.TaskState.Name(state)
 
 
 async def _create_a2a_client(*, streaming: bool):
