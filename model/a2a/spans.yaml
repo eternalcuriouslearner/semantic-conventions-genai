@@ -61,6 +61,3 @@ spans:
     attributes:
       - ref_group: a2a.common.attributes
       - ref_group: a2a.server.address_and_port.attributes
-      - ref: a2a.protocol.activated_extensions
-        requirement_level:
-          recommended: When the server activates protocol extensions for the request.

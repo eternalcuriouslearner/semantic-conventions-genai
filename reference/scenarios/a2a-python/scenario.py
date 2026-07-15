@@ -19,7 +19,6 @@ MOCK_A2A_URL = f"{os.environ.get('MOCK_LLM_URL', 'http://127.0.0.1:8080').rstrip
 PROTOCOL_VERSION = "1.0"
 PROTOCOL_BINDING = "JSONRPC"
 AGENT_CARD_URL = f"{MOCK_A2A_URL}/.well-known/agent-card.json"
-REQUESTED_EXTENSIONS = ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
 
 _reference_tracer = reference_tracer()
 
@@ -32,7 +31,6 @@ def _message(text: str, *, message_id: str, reference_task_ids: list[str] | None
         message_id=message_id,
         parts=[a2a_types.Part(text=text)],
         role=ROLE_USER,
-        extensions=REQUESTED_EXTENSIONS,
         reference_task_ids=reference_task_ids or [],
     )
 
@@ -103,7 +101,6 @@ async def run_message_send_reference() -> None:
         **_base_span_attrs(method),
         "a2a.message.id": "msg-user-1",
         "a2a.message.reference_task_ids": reference_task_ids,
-        "a2a.protocol.requested_extensions": REQUESTED_EXTENSIONS,
         "gen_ai.operation.name": "invoke_agent",
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
@@ -138,7 +135,6 @@ async def run_message_stream_reference() -> None:
     span_attrs = {
         **_base_span_attrs(method),
         "a2a.message.id": "msg-user-2",
-        "a2a.protocol.requested_extensions": REQUESTED_EXTENSIONS,
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.request.stream": True,
     }

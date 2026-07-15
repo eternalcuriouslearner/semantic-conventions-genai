@@ -133,24 +133,6 @@ attributes:
       object.
     examples: ["https://a2a-protocol.org/example/a2a/v1/card"]
     stability: development
-  - key: a2a.protocol.requested_extensions
-    type: string[]
-    brief: Protocol extensions requested by the client.
-    note: >
-      See the A2A specification for
-      [extensions](https://a2a-protocol.org/latest/specification/#46-extensions).
-    examples:
-      - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
-    stability: development
-  - key: a2a.protocol.activated_extensions
-    type: string[]
-    brief: Protocol extensions successfully activated by the server for this request.
-    note: >
-      See the A2A specification for
-      [extensions](https://a2a-protocol.org/latest/specification/#46-extensions).
-    examples:
-      - ["https://a2a-protocol.org/example/extensions/auth-forward/v1"]
-    stability: development
   - key: a2a.task.id
     type: string
     brief: The unique identifier of an A2A task.
