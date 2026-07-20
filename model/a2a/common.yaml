@@ -62,6 +62,14 @@ attribute_groups:
         requirement_level:
           recommended: When `server.address` is set.
 
+  - id: a2a.client.attributes
+    visibility: internal
+    attributes:
+      - ref_group: a2a.common.attributes
+      - ref: a2a.agent_card.url
+        requirement_level:
+          recommended: When the target agent's Agent Card URL is known.
+
   - id: a2a.server.address_and_port.attributes
     visibility: internal
     attributes:
