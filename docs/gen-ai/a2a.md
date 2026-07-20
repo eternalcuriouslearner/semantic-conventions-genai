@@ -42,9 +42,6 @@ calls and the time to consume the response stream for streaming calls.
 
 **Span name** SHOULD be `{a2a.method.name}`.
 
-**Span status** SHOULD be set to `ERROR` when `error.type` attribute is
-present. The status description SHOULD match the protocol error message.
-
 This span applies to A2A operations that do not invoke an agent. A2A
 `send_message` and `send_streaming_message` operations SHOULD use the
 A2A refinement of the GenAI invoke-agent client span instead.
@@ -54,6 +51,8 @@ request. A2A conventions describe the logical A2A request and task
 lifecycle.
 
 **Span kind** SHOULD be `CLIENT`.
+
+**Span status** SHOULD follow the [Recording Errors](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/general/recording-errors.md) document.
 
 **Requirement level:** [Recommended](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/signal-requirement-level.md).
 
