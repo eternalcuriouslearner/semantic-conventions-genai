@@ -54,8 +54,10 @@ span_refinements:
       extend and override the semantic conventions for GenAI invoke-agent
       client spans.
     note: |
-      This refinement applies when `a2a.method.name` is `send_message` or
-      `send_streaming_message`.
+      This refinement applies to A2A `SendMessage` and
+      `SendStreamingMessage` operations, recorded as `send_message` and
+      `send_streaming_message` in `a2a.method.name`. `GetTask` only retrieves
+      task state and MUST NOT use this refinement.
 
       Instrumentation SHOULD emit one span that conforms to this refinement,
       rather than a separate `a2a.client` span for the same operation.
