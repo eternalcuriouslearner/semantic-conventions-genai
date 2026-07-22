@@ -91,7 +91,6 @@ async def run_message_send_reference() -> None:
         **_base_span_attrs(method),
         "a2a.message.id": "msg-user-1",
         "a2a.message.reference_task_ids": reference_task_ids,
-        "gen_ai.operation.name": "invoke_agent",
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
         async with await _create_a2a_client(streaming=False) as client:
@@ -125,7 +124,6 @@ async def run_message_stream_reference() -> None:
     span_attrs = {
         **_base_span_attrs(method),
         "a2a.message.id": "msg-user-2",
-        "gen_ai.operation.name": "invoke_agent",
         "gen_ai.request.stream": True,
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:

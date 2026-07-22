@@ -1,4 +1,4 @@
-"""GenAI span classification: map span attributes to declared span types."""
+"""Span classification: map attributes to declared GenAI and A2A span types."""
 
 from __future__ import annotations
 
@@ -23,12 +23,13 @@ def _matches_spec(op_name: str, attrs: dict[str, object], span_type_key: str) ->
 
 
 def classify_span(span_name: str, span_kind: str, span_attrs: dict[str, object]) -> set[str]:
-    """Classify a span into GenAI span types using model-backed discriminators.
+    """Classify a span into model-backed GenAI and A2A span types.
 
     ``span_name`` is accepted to match the shared ``ClassifySpan`` signature
     but is not used. ``span_kind`` disambiguates the two ``invoke_agent`` span
     types; the rest of the classification is attribute-driven
-    (``gen_ai.operation.name`` plus discriminator attrs).
+    (``gen_ai.operation.name`` plus discriminator attributes such as
+    ``a2a.method.name``).
     """
     del span_name  # unused; accepted for signature compatibility
     op_name = str(span_attrs.get("gen_ai.operation.name", "")).lower()

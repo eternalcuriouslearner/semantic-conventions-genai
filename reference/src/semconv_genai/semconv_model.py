@@ -1,7 +1,8 @@
 """What attributes each GenAI span, event, and metric type should have.
 
-Attribute lists are derived from the YAML semconv model at ``model/gen-ai/``.
-Only labels, op_names, and discriminator_attrs are maintained here.
+Attribute lists are derived from the YAML semconv model at ``model/gen-ai/``
+and ``model/a2a/``. Only labels, op_names, and discriminator_attrs are
+maintained here.
 
 Ordering convention: every attribute / signal list written to a committed
 artifact (``scenarios/<lib>/data.json``, the generated status reports, the
@@ -19,11 +20,11 @@ from semconv_genai.attribute_spec import AttributeSpec
 
 # ── YAML model parsing ─────────────────────────────────────────────
 
-_MODEL_DIR = MODEL_ROOT / "gen-ai"
+_MODEL_DIRS = (MODEL_ROOT / "gen-ai", MODEL_ROOT / "a2a")
 
 
 def _load_groups() -> dict[str, dict]:
-    """Load all source files under ``model/gen-ai/`` and return a unified
+    """Load all source files under the supported model directories and return a unified
     lookup keyed by a synthetic id covering attribute groups, spans, and
     events.
 
@@ -31,17 +32,18 @@ def _load_groups() -> dict[str, dict]:
     ``span.`` / ``event.`` here so callers can address them with stable
     ids like ``span.gen_ai.inference.client``."""
     groups: dict[str, dict] = {}
-    for path in sorted(_MODEL_DIR.glob("*.yaml")):
-        doc = yaml.safe_load(path.read_text("utf-8")) or {}
-        for ag in doc.get("attribute_groups", []) or []:
-            if "id" in ag:
-                groups[ag["id"]] = ag
-        for span in doc.get("spans", []) or []:
-            if "type" in span:
-                groups[f"span.{span['type']}"] = span
-        for event in doc.get("events", []) or []:
-            if "name" in event:
-                groups[f"event.{event['name']}"] = event
+    for model_dir in _MODEL_DIRS:
+        for path in sorted(model_dir.glob("*.yaml")):
+            doc = yaml.safe_load(path.read_text("utf-8")) or {}
+            for ag in doc.get("attribute_groups", []) or []:
+                if "id" in ag:
+                    groups[ag["id"]] = ag
+            for span in doc.get("spans", []) or []:
+                if "type" in span:
+                    groups[f"span.{span['type']}"] = span
+            for event in doc.get("events", []) or []:
+                if "name" in event:
+                    groups[f"event.{event['name']}"] = event
     return groups
 
 
@@ -111,6 +113,12 @@ def _from_yaml(
 _groups = _load_groups()
 
 SPAN_SPECS: dict[str, AttributeSpec] = {
+    "a2a_client": _from_yaml(
+        _groups,
+        "span.a2a.client",
+        label="A2A Client",
+        discriminator_attrs=frozenset({"a2a.method.name"}),
+    ),
     "inference": _from_yaml(
         _groups,
         "span.gen_ai.inference.client",
