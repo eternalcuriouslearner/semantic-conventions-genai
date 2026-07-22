@@ -39,9 +39,7 @@ attribute_groups:
         requirement_level:
           conditionally_required: When the A2A request or response contains context id.
         note: >
-          This attribute SHOULD be set to the value of the A2A `contextId`
-          protocol field to allow cross-GenAI correlation. See the A2A
-          specification for
+          See the A2A specification for
           [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
       - ref: gen_ai.request.stream
         requirement_level:

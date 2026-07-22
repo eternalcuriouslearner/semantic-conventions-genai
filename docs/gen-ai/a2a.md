@@ -98,7 +98,7 @@ and
 
 **[7] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[8] `gen_ai.conversation.id`:** This attribute SHOULD be set to the value of the A2A `contextId` protocol field to allow cross-GenAI correlation. See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+**[8] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
 
 **[9] `gen_ai.request.stream`:** See the A2A specification for [Send Streaming Message](https://a2a-protocol.org/latest/specification/#312-send-streaming-message) and [streaming event delivery](https://a2a-protocol.org/latest/specification/#352-streaming-event-delivery).
 
