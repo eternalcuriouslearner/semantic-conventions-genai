@@ -17,7 +17,6 @@ from reference_shared import (
 
 MOCK_A2A_URL = f"{os.environ.get('MOCK_LLM_URL', 'http://127.0.0.1:8080').rstrip('/')}/a2a"
 PROTOCOL_VERSION = "1.0"
-PROTOCOL_BINDING = "JSONRPC"
 AGENT_CARD_URL = f"{MOCK_A2A_URL}/.well-known/agent-card.json"
 
 _reference_tracer = reference_tracer()
@@ -62,7 +61,6 @@ def _base_span_attrs(method: str):
     return {
         "a2a.method.name": method,
         "a2a.protocol.version": PROTOCOL_VERSION,
-        "a2a.protocol.binding": PROTOCOL_BINDING,
         "a2a.agent_card.url": AGENT_CARD_URL,
         **_server_attrs(),
     }

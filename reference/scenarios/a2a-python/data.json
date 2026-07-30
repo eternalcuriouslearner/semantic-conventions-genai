@@ -5,7 +5,6 @@
       "a2a.message.id",
       "a2a.message.reference_task_ids",
       "a2a.method.name",
-      "a2a.protocol.binding",
       "a2a.task.id",
       "a2a.task.state",
       "gen_ai.conversation.id",

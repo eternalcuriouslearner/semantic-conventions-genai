@@ -24,7 +24,6 @@
 | --- | --- |
 | a2a.agent_card.url | [a2a-python] |
 | a2a.message.reference_task_ids | [a2a-python] |
-| a2a.protocol.binding | [a2a-python] |
 | server.address | [a2a-python] |
 | server.port | [a2a-python] |
 

@@ -79,30 +79,6 @@ attributes:
       [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
     examples: ["1.0"]
     stability: development
-  - key: a2a.protocol.binding
-    type:
-      members:
-        - id: jsonrpc
-          value: JSONRPC
-          brief: >
-            JSON-RPC 2.0 transport binding.
-          stability: development
-        - id: grpc
-          value: GRPC
-          brief: >
-            gRPC transport binding.
-          stability: development
-        - id: http_json
-          value: HTTP+JSON
-          brief: >
-            HTTP+JSON/REST transport binding.
-          stability: development
-    brief: The underlying transport or transport binding used.
-    note: >
-      The well-known values match the transport protocol identifiers defined
-      by the A2A specification for
-      [protocol bindings](https://a2a-protocol.org/latest/specification/#5-protocol-binding-requirements-and-interoperability).
-    stability: development
   - key: a2a.message.id
     type: string
     brief: The unique identifier of the A2A message.
