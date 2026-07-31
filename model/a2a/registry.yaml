@@ -4,68 +4,67 @@ attributes:
     type:
       members:
         - id: send_message
-          value: send_message
+          value: SendMessage
           brief: >
             Request to send a message to an agent and receive a non-streaming
             response.
           stability: development
         - id: send_streaming_message
-          value: send_streaming_message
+          value: SendStreamingMessage
           brief: >
             Request to send a message to an agent and receive a streaming
             response.
           stability: development
         - id: get_task
-          value: get_task
+          value: GetTask
           brief: >
             Request to get the current state of a task.
           stability: development
         - id: cancel_task
-          value: cancel_task
+          value: CancelTask
           brief: >
             Request to cancel a task.
           stability: development
         - id: subscribe_to_task
-          value: subscribe_to_task
+          value: SubscribeToTask
           brief: >
             Request to subscribe to task updates.
           stability: development
         - id: list_tasks
-          value: list_tasks
+          value: ListTasks
           brief: >
             Request to list tasks.
           stability: development
         - id: create_task_push_notification_config
-          value: create_task_push_notification_config
+          value: CreateTaskPushNotificationConfig
           brief: >
             Request to create or update a task push notification configuration.
           stability: development
         - id: get_task_push_notification_config
-          value: get_task_push_notification_config
+          value: GetTaskPushNotificationConfig
           brief: >
             Request to get a task push notification configuration.
           stability: development
         - id: list_task_push_notification_configs
-          value: list_task_push_notification_configs
+          value: ListTaskPushNotificationConfigs
           brief: >
             Request to list task push notification configurations.
           stability: development
         - id: delete_task_push_notification_config
-          value: delete_task_push_notification_config
+          value: DeleteTaskPushNotificationConfig
           brief: >
             Request to delete a task push notification configuration.
           stability: development
         - id: get_extended_agent_card
-          value: get_extended_agent_card
+          value: GetExtendedAgentCard
           brief: >
             Request to get the extended agent card.
           stability: development
     brief: The name of the A2A request method.
     note: >
-      This attribute records the semconv-normalized, binding-independent name
-      of the high-level A2A operation. For example, `send_message` corresponds
-      to the A2A `SendMessage` operation. In the current A2A specification,
-      JSON-RPC and gRPC use `SendMessage`; HTTP+JSON uses `POST /message:send`.
+      This attribute records the logical A2A operation name defined by the
+      protocol. For example, `SendMessage` is the A2A operation name, while
+      HTTP+JSON maps it to `POST /message:send`.
       See the A2A specification for
       [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations)
       and
