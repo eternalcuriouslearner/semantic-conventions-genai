@@ -40,15 +40,6 @@ attribute_groups:
         note: >
           See the A2A specification for
           [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
-      - ref: gen_ai.request.stream
-        requirement_level:
-          conditionally_required: If and only if the A2A request is streaming.
-        note: >
-          See the A2A specification for
-          [Send Streaming Message](https://a2a-protocol.org/latest/specification/#312-send-streaming-message)
-          and
-          [streaming event delivery](https://a2a-protocol.org/latest/specification/#352-streaming-event-delivery).
-
   - id: a2a.client.address_and_port.attributes
     visibility: internal
     attributes:
