@@ -7,21 +7,15 @@ spans:
         **Span name** SHOULD be `{a2a.method.name}`.
     brief: This span describes an A2A call from the client side.
     note: |
-      This span is reported by the A2A client when it initiates an A2A
-      request. It covers the time to receive the response for non-streaming
+      It covers the time to receive the response for non-streaming
       calls and the time to consume the response stream for streaming calls.
 
       **Span name** SHOULD be `{a2a.method.name}`.
 
-      A2A `SendMessage` and `SendStreamingMessage` operations may be performed
-      as part of a higher-level GenAI agent invocation. When instrumentation
-      creates a `gen_ai.invoke_agent.client` span for that invocation, this
-      span SHOULD be its child. A2A instrumentation SHOULD NOT create a
-      `gen_ai.invoke_agent.client` span solely from an A2A protocol request.
-
-      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
-      request. A2A conventions describe the logical A2A request and task
-      lifecycle.
+      A2A `SendMessage`, `SendStreamingMessage` and other operations may be performed
+      as part of a higher-level GenAI agent invocation. A2A instrumentations report
+      spans for A2A requests only and SHOULD NOT report telemetry describing
+      higher level GenAI agent operations.
     stability: development
     attributes:
       - ref_group: a2a.client.attributes
@@ -34,15 +28,10 @@ spans:
         **Span name** SHOULD be `{a2a.method.name}`.
     brief: This span describes processing of an A2A request by the server.
     note: |
-      This span is reported by the A2A server when it processes an A2A
-      request. It covers the time to produce the response for non-streaming
+      It covers the time to produce the response for non-streaming
       calls and the time to produce the response stream for streaming calls.
 
       **Span name** SHOULD be `{a2a.method.name}`.
-
-      HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
-      request. A2A conventions describe the logical A2A request and task
-      lifecycle.
     stability: development
     attributes:
       - ref_group: a2a.common.attributes

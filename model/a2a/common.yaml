@@ -34,6 +34,7 @@ attribute_groups:
         requirement_level:
           conditionally_required: When the A2A response or event contains task state.
       - ref: gen_ai.conversation.id
+        brief: A2A `contextId` protocol field.
         requirement_level:
           conditionally_required: When the A2A request or response contains context id.
         note: >

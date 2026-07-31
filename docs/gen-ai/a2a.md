@@ -35,21 +35,15 @@ correlation, and streaming response behavior.
 
 This span describes an A2A call from the client side.
 
-This span is reported by the A2A client when it initiates an A2A
-request. It covers the time to receive the response for non-streaming
+It covers the time to receive the response for non-streaming
 calls and the time to consume the response stream for streaming calls.
 
 **Span name** SHOULD be `{a2a.method.name}`.
 
-A2A `SendMessage` and `SendStreamingMessage` operations may be performed
-as part of a higher-level GenAI agent invocation. When instrumentation
-creates a `gen_ai.invoke_agent.client` span for that invocation, this
-span SHOULD be its child. A2A instrumentation SHOULD NOT create a
-`gen_ai.invoke_agent.client` span solely from an A2A protocol request.
-
-HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
-request. A2A conventions describe the logical A2A request and task
-lifecycle.
+A2A `SendMessage`, `SendStreamingMessage` and other operations may be performed
+as part of a higher-level GenAI agent invocation. A2A instrumentations report
+spans for A2A requests only and SHOULD NOT report telemetry describing
+higher level GenAI agent operations.
 
 **Span kind** SHOULD be `CLIENT`.
 
@@ -66,7 +60,7 @@ lifecycle.
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | A2A `contextId` protocol field. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. [9] | |
 | [`a2a.agent_card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [10] | `https://a2a-protocol.org/example/a2a/v1/card` |
 | [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [11] | `["task-abc-5678"]` |
@@ -169,15 +163,10 @@ and
 
 This span describes processing of an A2A request by the server.
 
-This span is reported by the A2A server when it processes an A2A
-request. It covers the time to produce the response for non-streaming
+It covers the time to produce the response for non-streaming
 calls and the time to produce the response stream for streaming calls.
 
 **Span name** SHOULD be `{a2a.method.name}`.
-
-HTTP, JSON-RPC, and gRPC conventions describe the transport or RPC
-request. A2A conventions describe the logical A2A request and task
-lifecycle.
 
 **Span kind** SHOULD be `SERVER`.
 
@@ -194,7 +183,7 @@ lifecycle.
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | A2A `contextId` protocol field. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`gen_ai.request.stream`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` If and only if the A2A request is streaming. | boolean | Indicates whether the GenAI request was made in streaming mode. [9] | |
 | [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [10] | `["task-abc-5678"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [11] | `1.0` |
