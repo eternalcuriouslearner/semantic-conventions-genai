@@ -38,12 +38,12 @@ This span describes an A2A call from the client side.
 It covers the time to receive the response for non-streaming
 calls and the time to consume the response stream for streaming calls.
 
-**Span name** SHOULD be `{a2a.method.name}`.
-
 A2A `SendMessage`, `SendStreamingMessage` and other operations may be performed
 as part of a higher-level GenAI agent invocation. A2A instrumentations report
 spans for A2A requests only and SHOULD NOT report telemetry describing
 higher level GenAI agent operations.
+
+**Span name** SHOULD be `{a2a.method.name}`.
 
 **Span kind** SHOULD be `CLIENT`.
 

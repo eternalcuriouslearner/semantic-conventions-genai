@@ -10,8 +10,6 @@ spans:
       It covers the time to receive the response for non-streaming
       calls and the time to consume the response stream for streaming calls.
 
-      **Span name** SHOULD be `{a2a.method.name}`.
-
       A2A `SendMessage`, `SendStreamingMessage` and other operations may be performed
       as part of a higher-level GenAI agent invocation. A2A instrumentations report
       spans for A2A requests only and SHOULD NOT report telemetry describing
@@ -30,8 +28,6 @@ spans:
     note: |
       It covers the time to produce the response for non-streaming
       calls and the time to produce the response stream for streaming calls.
-
-      **Span name** SHOULD be `{a2a.method.name}`.
     stability: development
     attributes:
       - ref_group: a2a.common.attributes
