@@ -44,6 +44,7 @@ SPAN_TYPE_ORDER = [
     "inference",
     "embeddings",
     "retrieval",
+    "fetch_response",
     "memory",
     "execute_tool",
 ]
