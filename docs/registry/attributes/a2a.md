@@ -14,6 +14,7 @@
 | <a id="a2a-protocol-version" href="#a2a-protocol-version">`a2a.protocol.version`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The version of the A2A protocol used. [5] | `1.0` |
 | <a id="a2a-task-id" href="#a2a-task-id">`a2a.task.id`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The unique identifier of an A2A task. [6] | `task-5f2a7c7d9f8e4d2a` |
 | <a id="a2a-task-state" href="#a2a-task-state">`a2a.task.state`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The state of an A2A task. [7] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
+| <a id="a2a-tenant" href="#a2a-tenant">`a2a.tenant`</a> | ![Development](https://img.shields.io/badge/-development-blue) | string | The opaque routing identifier of the target A2A tenant. [8] | `billing` |
 
 
 **[1] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
@@ -29,6 +30,9 @@
 **[6] `a2a.task.id`:** See the A2A specification for the [Task](https://a2a-protocol.org/latest/specification/#411-task) object and [task identifier semantics](https://a2a-protocol.org/latest/specification/#342-task-identifier-semantics).
 
 **[7] `a2a.task.state`:** See the A2A specification for [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
+
+**[8] `a2a.tenant`:** This attribute records the value of the A2A request `tenant` field. It SHOULD NOT be set from URL-based or authentication-based routing.
+See the A2A [multi-tenancy guide](https://github.com/a2aproject/A2A/blob/main/docs/topics/multi-tenancy.md).
 
 ---
 

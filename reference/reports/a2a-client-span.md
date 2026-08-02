@@ -15,6 +15,7 @@
 | a2a.message.id | [a2a-python] |
 | a2a.task.id | [a2a-python] |
 | a2a.task.state | [a2a-python] |
+| a2a.tenant | [a2a-python] |
 | gen_ai.conversation.id | [a2a-python] |
 
 ## Recommended

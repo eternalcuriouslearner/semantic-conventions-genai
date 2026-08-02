@@ -19,7 +19,8 @@ linkTitle: Agent2Agent Protocol
 enables agents to communicate across vendors and frameworks.
 
 A2A conventions describe the logical A2A request, method, task lifecycle,
-A2A [`contextId`](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics)
+tenant routing, A2A
+[`contextId`](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics)
 correlation, and streaming response behavior.
 
 ## Spans
@@ -59,13 +60,14 @@ higher level GenAI agent operations.
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
-| [`a2a.agent_card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [9] | `https://a2a-protocol.org/example/a2a/v1/card` |
-| [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [10] | `["task-abc-5678"]` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [11] | `1.0` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Host component of the selected Agent Card interface URL. [12] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Port component of the selected Agent Card interface URL. [13] | `80`; `8080`; `443` |
+| [`a2a.tenant`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request `tenant` field is set. | string | The opaque routing identifier of the target A2A tenant. [6] | `billing` |
+| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [7] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`a2a.agent_card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [10] | `https://a2a-protocol.org/example/a2a/v1/card` |
+| [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [11] | `["task-abc-5678"]` |
+| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [12] | `1.0` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Host component of the selected Agent Card interface URL. [13] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Port component of the selected Agent Card interface URL. [14] | `80`; `8080`; `443` |
 
 **[1] `a2a.method.name`:** This attribute records the logical A2A operation name defined by the protocol. For example, `SendMessage` is the A2A operation name, while HTTP+JSON maps it to `POST /message:send`. See the A2A specification for [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations) and [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
 
@@ -77,7 +79,10 @@ higher level GenAI agent operations.
 
 **[5] `a2a.task.state`:** See the A2A specification for [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
 
-**[6] `error.type`:** This attribute SHOULD be set to the string representation of the
+**[6] `a2a.tenant`:** This attribute records the value of the A2A request `tenant` field. It SHOULD NOT be set from URL-based or authentication-based routing.
+See the A2A [multi-tenancy guide](https://github.com/a2aproject/A2A/blob/main/docs/topics/multi-tenancy.md).
+
+**[7] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
 
 When the RPC call is successful, but an error is returned within the
@@ -89,19 +94,19 @@ See the A2A specification for
 and
 [error code mappings](https://a2a-protocol.org/latest/specification/#54-error-code-mappings).
 
-**[7] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
+**[8] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[8] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+**[9] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
 
-**[9] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
+**[10] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
 
-**[10] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
+**[11] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
-**[11] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
+**[12] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
 
-**[12] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[13] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[13] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[14] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 
@@ -179,14 +184,15 @@ calls and the time to produce the response stream for streaming calls.
 | [`a2a.message.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request contains a message. | string | The unique identifier of the A2A message. [2] | `msg-user-1234` |
 | [`a2a.task.id`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request or response is task-scoped. | string | The unique identifier of an A2A task. [3] | `task-5f2a7c7d9f8e4d2a` |
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
-| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [6] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [7] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [8] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
-| [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [9] | `["task-abc-5678"]` |
-| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [10] | `1.0` |
-| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [11] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [12] | `65123` |
-| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [13] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
-| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [14] | `80`; `8080`; `443` |
+| [`a2a.tenant`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request `tenant` field is set. | string | The opaque routing identifier of the target A2A tenant. [6] | `billing` |
+| [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [7] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [10] | `["task-abc-5678"]` |
+| [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [11] | `1.0` |
+| [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [12] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`client.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `client.address` is set. | int | Client port number. [13] | `65123` |
+| [`server.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name. [14] | `example.com`; `10.1.2.80`; `/tmp/my.sock` |
+| [`server.port`](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/registry/attributes/server.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` When `server.address` is set. | int | Server port number. [15] | `80`; `8080`; `443` |
 
 **[1] `a2a.method.name`:** This attribute records the logical A2A operation name defined by the protocol. For example, `SendMessage` is the A2A operation name, while HTTP+JSON maps it to `POST /message:send`. See the A2A specification for [core operations](https://a2a-protocol.org/latest/specification/#31-core-operations) and [method mappings](https://a2a-protocol.org/latest/specification/#53-method-mapping-reference).
 
@@ -198,7 +204,10 @@ calls and the time to produce the response stream for streaming calls.
 
 **[5] `a2a.task.state`:** See the A2A specification for [TaskState](https://a2a-protocol.org/latest/specification/#413-taskstate).
 
-**[6] `error.type`:** This attribute SHOULD be set to the string representation of the
+**[6] `a2a.tenant`:** This attribute records the value of the A2A request `tenant` field. It SHOULD NOT be set from URL-based or authentication-based routing.
+See the A2A [multi-tenancy guide](https://github.com/a2aproject/A2A/blob/main/docs/topics/multi-tenancy.md).
+
+**[7] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
 
 When the RPC call is successful, but an error is returned within the
@@ -210,21 +219,21 @@ See the A2A specification for
 and
 [error code mappings](https://a2a-protocol.org/latest/specification/#54-error-code-mappings).
 
-**[7] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
+**[8] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[8] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+**[9] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
 
-**[9] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
+**[10] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 
-**[10] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
+**[11] `a2a.protocol.version`:** See the A2A specification for [versioning](https://a2a-protocol.org/latest/specification/#36-versioning).
 
-**[11] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
+**[12] `client.address`:** When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent the client address behind any intermediaries,  for example proxies, if it's available.
 
-**[12] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
+**[13] `client.port`:** When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent the client port behind any intermediaries,  for example proxies, if it's available.
 
-**[13] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+**[14] `server.address`:** When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 
-**[14] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+**[15] `server.port`:** When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 
 ---
 

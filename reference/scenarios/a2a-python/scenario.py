@@ -18,6 +18,7 @@ from reference_shared import (
 MOCK_A2A_URL = f"{os.environ.get('MOCK_LLM_URL', 'http://127.0.0.1:8080').rstrip('/')}/a2a"
 PROTOCOL_VERSION = "1.0"
 AGENT_CARD_URL = f"{MOCK_A2A_URL}/.well-known/agent-card.json"
+TENANT = "billing"
 
 _reference_tracer = reference_tracer()
 
@@ -37,10 +38,11 @@ def _task_state_value(state: int) -> str:
     return a2a_types.TaskState.Name(state)
 
 
-async def _create_a2a_client(*, streaming: bool):
+async def _create_a2a_client(*, streaming: bool, tenant: str):
     httpx_client = httpx.AsyncClient()
     card = minimal_agent_card(MOCK_A2A_URL, [TransportProtocol.JSONRPC])
     card.capabilities.streaming = streaming
+    card.supported_interfaces[0].tenant = tenant
     return await create_client(
         card,
         ClientConfig(streaming=streaming, httpx_client=httpx_client),
@@ -78,6 +80,7 @@ async def run_message_send_reference() -> None:
     method = "SendMessage"
     reference_task_ids = ["task-calendar-summary"]
     request = a2a_types.SendMessageRequest(
+        tenant=TENANT,
         message=_message(
             "Summarize my calendar.",
             message_id="msg-user-1",
@@ -87,11 +90,12 @@ async def run_message_send_reference() -> None:
 
     span_attrs = {
         **_base_span_attrs(method),
+        "a2a.tenant": request.tenant,
         "a2a.message.id": "msg-user-1",
         "a2a.message.reference_task_ids": reference_task_ids,
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=False) as client:
+        async with await _create_a2a_client(streaming=False, tenant=request.tenant) as client:
             response = await anext(client.send_message(request))
         task = response.task
         task_state = _task_state_value(task.status.state)
@@ -109,6 +113,7 @@ async def run_message_stream_reference() -> None:
     print("  [send_streaming_message] A2A JSON-RPC send_streaming_message")
     method = "SendStreamingMessage"
     request = a2a_types.SendMessageRequest(
+        tenant=TENANT,
         message=_message(
             "Track this task.",
             message_id="msg-user-2",
@@ -121,10 +126,11 @@ async def run_message_stream_reference() -> None:
     task_state = None
     span_attrs = {
         **_base_span_attrs(method),
+        "a2a.tenant": request.tenant,
         "a2a.message.id": "msg-user-2",
     }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=True) as client:
+        async with await _create_a2a_client(streaming=True, tenant=request.tenant) as client:
             async for event in client.send_message(request):
                 event_count += 1
                 if event.HasField("status_update"):
@@ -141,12 +147,16 @@ async def run_tasks_get_reference() -> None:
     print("  [get_task] A2A JSON-RPC get_task")
     method = "GetTask"
     request = a2a_types.GetTaskRequest(
+        tenant=TENANT,
         id="task-calendar-summary",
     )
 
-    span_attrs = _base_span_attrs(method)
+    span_attrs = {
+        **_base_span_attrs(method),
+        "a2a.tenant": request.tenant,
+    }
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(streaming=False) as client:
+        async with await _create_a2a_client(streaming=False, tenant=request.tenant) as client:
             task = await client.get_task(request)
         task_state = _task_state_value(task.status.state)
         _set_task_response_attrs(

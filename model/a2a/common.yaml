@@ -21,6 +21,9 @@ attribute_groups:
           and
           [error code mappings](https://a2a-protocol.org/latest/specification/#54-error-code-mappings).
       - ref: a2a.protocol.version
+      - ref: a2a.tenant
+        requirement_level:
+          conditionally_required: When the A2A request `tenant` field is set.
       - ref: a2a.message.id
         requirement_level:
           conditionally_required: When the A2A request contains a message.
