@@ -44,9 +44,11 @@ attribute_groups:
     visibility: internal
     attributes:
       - ref: server.address
+        brief: Host component of the selected Agent Card interface URL.
         requirement_level:
           recommended: If applicable.
       - ref: server.port
+        brief: Port component of the selected Agent Card interface URL.
         requirement_level:
           recommended: When `server.address` is set.
 
