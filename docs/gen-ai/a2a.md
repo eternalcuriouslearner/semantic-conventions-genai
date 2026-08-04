@@ -302,7 +302,7 @@ gen_ai.invoke_agent.client
    └─ http.client POST /message:send
 ```
 
-For a gRPC binding, the innermost span is `rpc.client SendMessage` rather than
+For RPC bindings, the innermost span is `rpc.client SendMessage` rather than
 an HTTP client span.
 
 ### Asynchronous task polling
@@ -335,6 +335,6 @@ http.server POST /message:send
 └─ a2a.server SendMessage
 ```
 
-For a gRPC binding, the transport span is `rpc.server SendMessage`.
+For RPC bindings, the transport span is `rpc.server SendMessage`.
 
 [DocumentStatus]: https://opentelemetry.io/docs/specs/otel/document-status
