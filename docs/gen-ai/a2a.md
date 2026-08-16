@@ -302,8 +302,8 @@ invoke_agent weather-agent         (GenAI agent)
    └─ POST /message:send           (HTTP client)
 ```
 
-For RPC bindings, the innermost span is `rpc.client SendMessage` rather than
-an HTTP client span.
+For RPC bindings, the innermost span is RPC Client
+`A2AService.SendMessage` rather than an HTTP client span.
 
 ### Asynchronous task polling
 
@@ -335,6 +335,7 @@ POST /message:send                 (HTTP server)
 └─ SendMessage                     (A2A server)
 ```
 
-For RPC bindings, the transport span is `rpc.server SendMessage`.
+For RPC bindings, the transport span is RPC Server
+`A2AService.SendMessage`.
 
 [DocumentStatus]: https://opentelemetry.io/docs/specs/otel/document-status
