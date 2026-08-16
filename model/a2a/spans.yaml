@@ -16,7 +16,10 @@ spans:
       higher level GenAI agent operations.
     stability: development
     attributes:
-      - ref_group: a2a.client.attributes
+      - ref_group: a2a.common.attributes
+      - ref: a2a.agent_card.url
+        requirement_level:
+          recommended: When the target agent's Agent Card URL is known.
       - ref_group: a2a.client.address_and_port.attributes
 
   - type: a2a.server
