@@ -297,9 +297,9 @@ When an agent framework invokes a remote agent and its context remains active,
 the A2A span can be a child of `gen_ai.invoke_agent.client`:
 
 ```text
-gen_ai.invoke_agent.client
-└─ a2a.client SendMessage
-   └─ http.client POST /message:send
+invoke_agent weather-agent         (GenAI agent)
+└─ SendMessage                     (A2A client)
+   └─ POST /message:send           (HTTP client)
 ```
 
 For RPC bindings, the innermost span is `rpc.client SendMessage` rather than
@@ -312,13 +312,13 @@ poll the task. While the parent context remains active, the A2A operation spans
 are siblings; `GetTask` is not a child of `SendMessage`:
 
 ```text
-gen_ai.invoke_agent.client
-├─ a2a.client SendMessage
-│  └─ http.client POST /message:send
-├─ a2a.client GetTask
-│  └─ http.client GET /tasks/{id}
-└─ a2a.client GetTask
-   └─ http.client GET /tasks/{id}
+invoke_agent weather-agent         (GenAI agent)
+├─ SendMessage                     (A2A client)
+│  └─ POST /message:send           (HTTP client)
+├─ GetTask                         (A2A client)
+│  └─ GET /tasks/{id}              (HTTP client)
+└─ GetTask                         (A2A client)
+   └─ GET /tasks/{id}              (HTTP client)
 ```
 
 If polling occurs later or in a different process without the original parent
@@ -331,8 +331,8 @@ On the receiving side, the transport server span can be the parent of the A2A
 server span:
 
 ```text
-http.server POST /message:send
-└─ a2a.server SendMessage
+POST /message:send                 (HTTP server)
+└─ SendMessage                     (A2A server)
 ```
 
 For RPC bindings, the transport span is `rpc.server SendMessage`.
