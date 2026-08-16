@@ -335,7 +335,7 @@ POST /message:send                 (HTTP server)
 └─ SendMessage                     (A2A server)
 ```
 
-For RPC bindings, the transport span is RPC Server
+For RPC bindings, the transport span is RPC server span
 `A2AService.SendMessage`.
 
 [DocumentStatus]: https://opentelemetry.io/docs/specs/otel/document-status
