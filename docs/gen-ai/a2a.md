@@ -65,7 +65,7 @@ higher level GenAI agent operations.
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`a2a.tenant`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request `tenant` field is set. | string | The opaque routing identifier of the target A2A tenant. [6] | `billing` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [7] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifies the A2A [context identifier](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics). [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`a2a.agent_card.url`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the target agent's Agent Card URL is known. | string | The endpoint URL of the target A2A agent's Agent Card. [10] | `https://a2a-protocol.org/example/a2a/v1/card` |
 | [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [11] | `["task-abc-5678"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [12] | `1.0` |
@@ -103,7 +103,7 @@ and
 
 **[8] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[9] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+**[9] `gen_ai.conversation.id`:** Set from the A2A `contextId` field.
 
 **[10] `a2a.agent_card.url`:** See the A2A specification for [Agent Card discovery](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) and the [AgentCard](https://a2a-protocol.org/latest/specification/#441-agentcard) object.
 
@@ -193,7 +193,7 @@ calls and the time to produce the response stream for streaming calls.
 | [`a2a.task.state`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [4] | string | The state of an A2A task. [5] | `TASK_STATE_SUBMITTED`; `TASK_STATE_WORKING`; `TASK_STATE_INPUT_REQUIRED` |
 | [`a2a.tenant`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` When the A2A request `tenant` field is set. | string | The opaque routing identifier of the target A2A tenant. [6] | `billing` |
 | [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/registry/attributes/error.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Conditionally Required` If and only if the operation fails. | string | Describes a class of error the operation ended with. [7] | `timeout`; `java.net.UnknownHostException`; `server_certificate_invalid`; `500` |
-| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions. [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
+| [`gen_ai.conversation.id`](/docs/registry/attributes/gen-ai.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Conditionally Required` [8] | string | Identifies the A2A [context identifier](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics). [9] | `conv_5j66UpCpwteGg4YSxUnt7lPY` |
 | [`a2a.message.reference_task_ids`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` When the request message references task IDs. | string[] | Task IDs referenced by the A2A request message. [10] | `["task-abc-5678"]` |
 | [`a2a.protocol.version`](/docs/registry/attributes/a2a.md) | ![Development](https://img.shields.io/badge/-development-blue) | `Recommended` | string | The version of the A2A protocol used. [11] | `1.0` |
 | [`client.address`](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/registry/attributes/client.md) | ![Stable](https://img.shields.io/badge/-stable-lightgreen) | `Recommended` If applicable. | string | Client address - domain name if available without reverse DNS lookup; otherwise, IP address or UNIX domain socket name. [12] | `client.example.com`; `10.1.2.80`; `/tmp/my.sock` |
@@ -232,7 +232,7 @@ and
 
 **[8] `gen_ai.conversation.id`:** When the A2A request or response contains context id.
 
-**[9] `gen_ai.conversation.id`:** See the A2A specification for [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+**[9] `gen_ai.conversation.id`:** Set from the A2A `contextId` field.
 
 **[10] `a2a.message.reference_task_ids`:** See the A2A specification for the [Message](https://a2a-protocol.org/latest/specification/#414-message) object.
 

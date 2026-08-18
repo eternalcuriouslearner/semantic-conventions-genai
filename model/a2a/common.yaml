@@ -41,12 +41,10 @@ attribute_groups:
         requirement_level:
           conditionally_required: When the A2A response or event contains task state.
       - ref: gen_ai.conversation.id
-        brief: Identifier that logically groups related A2A Task and Message objects, providing continuity across interactions.
+        brief: Identifies the A2A [context identifier](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
         requirement_level:
           conditionally_required: When the A2A request or response contains context id.
-        note: >
-          See the A2A specification for
-          [context identifier semantics](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
+        note: Set from the A2A `contextId` field.
   - id: a2a.client.address_and_port.attributes
     visibility: internal
     attributes:
