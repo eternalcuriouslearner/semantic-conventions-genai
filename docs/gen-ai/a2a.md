@@ -88,6 +88,10 @@ See the A2A [multi-tenancy guide](https://github.com/a2aproject/A2A/blob/main/do
 **[7] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
 
+Otherwise (for example on timeouts or transport errors), it SHOULD be
+set following the [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/registry/attributes/error.md)
+guidance.
+
 When the RPC call is successful, but an error is returned within the
 A2A result payload, this attribute SHOULD be set to the low-cardinality
 string representation of the error.
@@ -212,6 +216,10 @@ See the A2A [multi-tenancy guide](https://github.com/a2aproject/A2A/blob/main/do
 
 **[7] `error.type`:** This attribute SHOULD be set to the string representation of the
 JSON-RPC error code or gRPC status code, if one is returned.
+
+Otherwise (for example on timeouts or transport errors), it SHOULD be
+set following the [`error.type`](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/registry/attributes/error.md)
+guidance.
 
 When the RPC call is successful, but an error is returned within the
 A2A result payload, this attribute SHOULD be set to the low-cardinality

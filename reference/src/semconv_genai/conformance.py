@@ -150,8 +150,5 @@ def run(directory: Path, *, report_only: bool, extra_args: list[str] | None = No
     ]
     if report_only:
         command.append("--report-only")
-    if directory.name == "a2a-python":
-        reducer = f'{_uv()} run --project {REFERENCE_ROOT} python -m semconv_genai.a2a_coverage "$1"'
-        command.extend(["--data-command", reducer])
     command.extend(extra_args or [])
     return subprocess.run(command, cwd=SEMCONV_ROOT, env=_environment(), check=False).returncode
