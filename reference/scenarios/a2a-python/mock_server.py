@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
+from collections.abc import Generator
+from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+
+PROTOCOL_VERSION = "1.0"
 
 
 def _task(
@@ -34,6 +39,9 @@ def _response(request_id: Any, result: dict[str, Any]) -> dict[str, Any]:
 class A2ARequestHandler(BaseHTTPRequestHandler):
     """Serve only the JSON-RPC operations exercised by the scenario."""
 
+    tracer: Any | None = None
+    span_kind: Any | None = None
+
     def do_GET(self) -> None:
         if self.path == "/health":
             self.send_response(HTTPStatus.OK)
@@ -50,38 +58,88 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
         request = json.loads(self.rfile.read(content_length))
         request_id = request.get("id")
         method = request.get("method")
+        params = request.get("params") or {}
 
-        if method == "SendMessage":
-            self._send_json(
-                _response(
-                    request_id,
-                    {
-                        "task": {
-                            **_task(),
-                            "history": [
-                                {
-                                    "messageId": "msg-agent-1",
-                                    "role": "ROLE_AGENT",
-                                    "taskId": "task-calendar-summary",
-                                    "parts": [{"text": "Your afternoon is open."}],
-                                }
-                            ],
-                        }
-                    },
+        with self._start_span(method, params) as span:
+            if method == "SendMessage":
+                task = _task()
+                self._set_task_attributes(span, task)
+                self._send_json(
+                    _response(
+                        request_id,
+                        {
+                            "task": {
+                                **task,
+                                "history": [
+                                    {
+                                        "messageId": "msg-agent-1",
+                                        "role": "ROLE_AGENT",
+                                        "taskId": "task-calendar-summary",
+                                        "parts": [{"text": "Your afternoon is open."}],
+                                    }
+                                ],
+                            }
+                        },
+                    )
                 )
+                return
+
+            if method == "SendStreamingMessage":
+                self._set_task_attributes(
+                    span,
+                    _task(
+                        task_id="task-streaming",
+                        context_id="ctx-streaming",
+                    ),
+                )
+                self._send_stream(request_id)
+                return
+
+            if method == "GetTask":
+                task = _task(task_id=params.get("id", "task-calendar-summary"))
+                self._set_task_attributes(span, task)
+                self._send_json(_response(request_id, task))
+                return
+
+            self._send_json(
+                {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": -32601, "message": "Method not found"},
+                }
             )
+
+    @contextmanager
+    def _start_span(self, method: str | None, params: dict[str, Any]) -> Generator[Any | None, None, None]:
+        if self.tracer is None or self.span_kind is None:
+            yield None
             return
 
-        if method == "SendStreamingMessage":
-            self._send_stream(request_id)
-            return
+        message = params.get("message") or {}
+        host, port = self.server.server_address[:2]
+        client_host, client_port = self.client_address
+        attributes: dict[str, Any] = {
+            "a2a.method.name": method,
+            "a2a.protocol.version": PROTOCOL_VERSION,
+            "a2a.tenant": params.get("tenant"),
+            "a2a.message.id": message.get("messageId"),
+            "a2a.message.reference_task_ids": message.get("referenceTaskIds"),
+            "server.address": host,
+            "server.port": port,
+            "client.address": client_host,
+            "client.port": client_port,
+        }
+        attributes = {key: value for key, value in attributes.items() if value not in (None, [])}
+        with self.tracer.start_as_current_span(method or "A2A", kind=self.span_kind, attributes=attributes) as span:
+            yield span
 
-        if method == "GetTask":
-            params = request.get("params") or {}
-            self._send_json(_response(request_id, _task(task_id=params.get("id", "task-calendar-summary"))))
+    @staticmethod
+    def _set_task_attributes(span: Any | None, task: dict[str, Any]) -> None:
+        if span is None:
             return
-
-        self._send_json({"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": "Method not found"}})
+        span.set_attribute("a2a.task.id", task["id"])
+        span.set_attribute("a2a.task.state", task["status"]["state"])
+        span.set_attribute("gen_ai.conversation.id", task["contextId"])
 
     def _send_json(self, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode()
@@ -112,6 +170,26 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: object) -> None:
         return
+
+
+@contextmanager
+def running_mock_server(*, tracer: Any, span_kind: Any) -> Generator[str, None, None]:
+    """Run the A2A mock in-process so its spans reach the scenario exporter."""
+    handler = type(
+        "InstrumentedA2ARequestHandler",
+        (A2ARequestHandler,),
+        {"tracer": tracer, "span_kind": span_kind},
+    )
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        host, port = server.server_address[:2]
+        yield f"http://{host}:{port}/a2a"
+    finally:
+        server.shutdown()
+        thread.join()
+        server.server_close()
 
 
 def main() -> None:
