@@ -74,7 +74,8 @@ def _spec(model: dict[str, dict], kind: str, registry_id: str, label: str) -> At
         "opt_in": [],
     }
     for name, level in sorted(declared["attributes"].items()):
-        # A level carrying a condition is reported as the level itself.
+        # A level carrying a condition is written `<level>_conditional`; the
+        # reports bucket by the level itself.
         buckets[level.removesuffix("_conditional")].append(name)
     return AttributeSpec(
         label=label,
