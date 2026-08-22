@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import threading
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -41,6 +41,7 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
 
     tracer: Any | None = None
     span_kind: Any | None = None
+    agent_card: Any | None = None
 
     def do_GET(self) -> None:
         if self.path == "/health":
@@ -129,6 +130,7 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
             "client.address": client_host,
             "client.port": client_port,
         }
+        attributes.update(_agent_attributes(self.agent_card))
         attributes = {key: value for key, value in attributes.items() if value not in (None, [])}
         with self.tracer.start_as_current_span(method or "A2A", kind=self.span_kind, attributes=attributes) as span:
             yield span
@@ -172,8 +174,27 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
         return
 
 
+def _agent_attributes(card: Any | None) -> dict[str, str]:
+    if card is None:
+        return {}
+    return {
+        key: value
+        for key, value in {
+            "gen_ai.agent.name": getattr(card, "name", None),
+            "gen_ai.agent.description": getattr(card, "description", None),
+            "gen_ai.agent.version": getattr(card, "version", None),
+        }.items()
+        if value
+    }
+
+
 @contextmanager
-def running_mock_server(*, tracer: Any, span_kind: Any) -> Generator[str, None, None]:
+def running_mock_server(
+    *,
+    tracer: Any,
+    span_kind: Any,
+    agent_card_factory: Callable[[str], Any],
+) -> Generator[str, None, None]:
     """Run the A2A mock in-process so its spans reach the scenario exporter."""
     handler = type(
         "InstrumentedA2ARequestHandler",
@@ -181,11 +202,13 @@ def running_mock_server(*, tracer: Any, span_kind: Any) -> Generator[str, None, 
         {"tracer": tracer, "span_kind": span_kind},
     )
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    host, port = server.server_address[:2]
+    url = f"http://{host}:{port}/a2a"
+    handler.agent_card = agent_card_factory(url)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        host, port = server.server_address[:2]
-        yield f"http://{host}:{port}/a2a"
+        yield url
     finally:
         server.shutdown()
         thread.join()

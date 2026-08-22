@@ -1,3 +1,4 @@
+# I'm an AI agent!!!
 file_format: definition/2
 spans:
   - type: a2a.client
@@ -20,6 +21,15 @@ spans:
       - ref: a2a.agent_card.url
         requirement_level:
           recommended: When the target agent's Agent Card URL is known.
+      - ref: gen_ai.agent.name
+        requirement_level:
+          conditionally_required: When available from the target Agent Card.
+      - ref: gen_ai.agent.description
+        requirement_level:
+          conditionally_required: When available from the target Agent Card.
+      - ref: gen_ai.agent.version
+        requirement_level:
+          conditionally_required: When available from the target Agent Card.
       - ref_group: a2a.client.address_and_port.attributes
 
   - type: a2a.server
@@ -34,4 +44,13 @@ spans:
     stability: development
     attributes:
       - ref_group: a2a.common.attributes
+      - ref: gen_ai.agent.name
+        requirement_level:
+          conditionally_required: When available from the local Agent Card.
+      - ref: gen_ai.agent.description
+        requirement_level:
+          conditionally_required: When available from the local Agent Card.
+      - ref: gen_ai.agent.version
+        requirement_level:
+          conditionally_required: When available from the local Agent Card.
       - ref_group: a2a.server.address_and_port.attributes

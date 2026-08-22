@@ -17,6 +17,9 @@ from reference_shared import (
 
 PROTOCOL_VERSION = "1.0"
 TENANT = "billing"
+AGENT_NAME = "Weather Agent"
+AGENT_DESCRIPTION = "Provides weather forecasts."
+AGENT_VERSION = "1.0.0"
 
 _reference_tracer = reference_tracer()
 
@@ -36,11 +39,18 @@ def _task_state_value(state: int) -> str:
     return a2a_types.TaskState.Name(state)
 
 
-async def _create_a2a_client(a2a_url: str, *, streaming: bool, tenant: str):
-    httpx_client = httpx.AsyncClient()
+def _agent_card(a2a_url: str) -> a2a_types.AgentCard:
     card = minimal_agent_card(a2a_url, [TransportProtocol.JSONRPC])
-    card.capabilities.streaming = streaming
-    card.supported_interfaces[0].tenant = tenant
+    card.capabilities.streaming = True
+    card.supported_interfaces[0].tenant = TENANT
+    card.name = AGENT_NAME
+    card.description = AGENT_DESCRIPTION
+    card.version = AGENT_VERSION
+    return card
+
+
+async def _create_a2a_client(card: a2a_types.AgentCard, *, streaming: bool):
+    httpx_client = httpx.AsyncClient()
     return await create_client(
         card,
         ClientConfig(streaming=streaming, httpx_client=httpx_client),
@@ -61,6 +71,7 @@ async def run_message_send_reference(a2a_url: str) -> None:
         ),
     )
 
+    card = _agent_card(a2a_url)
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
@@ -69,13 +80,16 @@ async def run_message_send_reference(a2a_url: str) -> None:
         "a2a.tenant": request.tenant,
         "a2a.message.id": request.message.message_id,
         "a2a.message.reference_task_ids": request.message.reference_task_ids,
+        "gen_ai.agent.name": card.name,
+        "gen_ai.agent.description": card.description,
+        "gen_ai.agent.version": card.version,
     }
     if host:
         span_attrs["server.address"] = host
     if port is not None:
         span_attrs["server.port"] = port
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(a2a_url, streaming=False, tenant=request.tenant) as client:
+        async with await _create_a2a_client(card, streaming=False) as client:
             response = await anext(client.send_message(request))
         task = response.task
         task_state = _task_state_value(task.status.state)
@@ -101,6 +115,7 @@ async def run_message_stream_reference(a2a_url: str) -> None:
     task_id = None
     context_id = None
     task_state = None
+    card = _agent_card(a2a_url)
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
@@ -108,13 +123,16 @@ async def run_message_stream_reference(a2a_url: str) -> None:
         "a2a.agent_card.url": f"{a2a_url}/.well-known/agent-card.json",
         "a2a.tenant": request.tenant,
         "a2a.message.id": request.message.message_id,
+        "gen_ai.agent.name": card.name,
+        "gen_ai.agent.description": card.description,
+        "gen_ai.agent.version": card.version,
     }
     if host:
         span_attrs["server.address"] = host
     if port is not None:
         span_attrs["server.port"] = port
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(a2a_url, streaming=True, tenant=request.tenant) as client:
+        async with await _create_a2a_client(card, streaming=True) as client:
             async for event in client.send_message(request):
                 event_count += 1
                 if event.HasField("status_update"):
@@ -140,19 +158,23 @@ async def run_tasks_get_reference(a2a_url: str) -> None:
         id="task-calendar-summary",
     )
 
+    card = _agent_card(a2a_url)
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
         "a2a.protocol.version": PROTOCOL_VERSION,
         "a2a.agent_card.url": f"{a2a_url}/.well-known/agent-card.json",
         "a2a.tenant": request.tenant,
+        "gen_ai.agent.name": card.name,
+        "gen_ai.agent.description": card.description,
+        "gen_ai.agent.version": card.version,
     }
     if host:
         span_attrs["server.address"] = host
     if port is not None:
         span_attrs["server.port"] = port
     with _reference_tracer.start_as_current_span(method, kind=SpanKind.CLIENT, attributes=span_attrs) as span:
-        async with await _create_a2a_client(a2a_url, streaming=False, tenant=request.tenant) as client:
+        async with await _create_a2a_client(card, streaming=False) as client:
             task = await client.get_task(request)
         task_state = _task_state_value(task.status.state)
         span.set_attribute("a2a.task.id", task.id)
@@ -172,7 +194,11 @@ def main() -> None:
 
     tp, lp, mp = setup_otel()
 
-    with running_mock_server(tracer=_reference_tracer, span_kind=SpanKind.SERVER) as a2a_url:
+    with running_mock_server(
+        tracer=_reference_tracer,
+        span_kind=SpanKind.SERVER,
+        agent_card_factory=_agent_card,
+    ) as a2a_url:
         asyncio.run(run_scenarios(a2a_url))
 
     flush_and_shutdown(tp, lp, mp)

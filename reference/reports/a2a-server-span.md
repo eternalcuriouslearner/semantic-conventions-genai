@@ -1,6 +1,6 @@
-# A2A Client Span
+# A2A Server Span
 
-> **[Semantic Convention](../../docs/gen-ai/a2a.md#client)**
+> **[Semantic Convention](../../docs/gen-ai/a2a.md#server)**
 
 ## Required
 
@@ -25,9 +25,10 @@
 
 | Attribute | Supporting Libraries |
 | --- | --- |
-| a2a.agent_card.url | [a2a-python] |
 | a2a.message.reference_task_ids | [a2a-python] |
 | a2a.protocol.version | [a2a-python] |
+| client.address | [a2a-python] |
+| client.port | [a2a-python] |
 | server.address | [a2a-python] |
 | server.port | [a2a-python] |
 
