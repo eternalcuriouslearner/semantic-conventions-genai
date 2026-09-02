@@ -13,10 +13,6 @@ attribute_groups:
           JSON-RPC error code, protocol status code, if one is returned, or 
           the canonical name of exception that occurred.
 
-          When the RPC call is successful, but an error is returned within the
-          A2A result payload, this attribute SHOULD be set to the low-cardinality
-          string representation of the error.
-
           See the A2A specification for
           [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)
           and
