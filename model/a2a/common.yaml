@@ -10,8 +10,8 @@ attribute_groups:
           conditionally_required: If and only if the operation fails.
         note: |
           This attribute SHOULD be set to the string representation of the
-          JSON-RPC error code, protocol status code, if one is returned, or 
-          the canonical name of exception that occurred.
+          JSON-RPC error code or protocol status code, if one is returned, or
+          the canonical name of the exception that occurred.
 
           See the A2A specification for
           [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)

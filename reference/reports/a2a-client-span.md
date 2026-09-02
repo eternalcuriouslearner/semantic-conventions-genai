@@ -25,7 +25,6 @@
 
 | Attribute | Supporting Libraries |
 | --- | --- |
-| a2a.agent_card.url | [a2a-python] |
 | a2a.message.reference_task_ids | [a2a-python] |
 | a2a.protocol.version | [a2a-python] |
 | server.address | [a2a-python] |

@@ -17,9 +17,6 @@ spans:
     stability: development
     attributes:
       - ref_group: a2a.common.attributes
-      - ref: a2a.agent_card.url
-        requirement_level:
-          recommended: When the target agent's Agent Card URL is known.
       - ref: gen_ai.agent.name
         requirement_level:
           conditionally_required: When available from the target Agent Card.

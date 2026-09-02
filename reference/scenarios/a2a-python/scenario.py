@@ -42,7 +42,11 @@ def _task_state_value(state: int) -> str:
 def _agent_card(a2a_url: str) -> a2a_types.AgentCard:
     card = minimal_agent_card(a2a_url, [TransportProtocol.JSONRPC])
     card.capabilities.streaming = True
-    card.supported_interfaces[0].tenant = TENANT
+    interface = next(
+        interface for interface in card.supported_interfaces if interface.protocol_binding == TransportProtocol.JSONRPC
+    )
+    interface.tenant = TENANT
+    interface.protocol_version = PROTOCOL_VERSION
     card.name = AGENT_NAME
     card.description = AGENT_DESCRIPTION
     card.version = AGENT_VERSION
@@ -72,11 +76,13 @@ async def run_message_send_reference(a2a_url: str) -> None:
     )
 
     card = _agent_card(a2a_url)
+    interface = next(
+        interface for interface in card.supported_interfaces if interface.protocol_binding == TransportProtocol.JSONRPC
+    )
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
-        "a2a.protocol.version": PROTOCOL_VERSION,
-        "a2a.agent_card.url": f"{a2a_url}/.well-known/agent-card.json",
+        "a2a.protocol.version": interface.protocol_version,
         "a2a.tenant": request.tenant,
         "a2a.message.id": request.message.message_id,
         "a2a.message.reference_task_ids": request.message.reference_task_ids,
@@ -116,11 +122,13 @@ async def run_message_stream_reference(a2a_url: str) -> None:
     context_id = None
     task_state = None
     card = _agent_card(a2a_url)
+    interface = next(
+        interface for interface in card.supported_interfaces if interface.protocol_binding == TransportProtocol.JSONRPC
+    )
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
-        "a2a.protocol.version": PROTOCOL_VERSION,
-        "a2a.agent_card.url": f"{a2a_url}/.well-known/agent-card.json",
+        "a2a.protocol.version": interface.protocol_version,
         "a2a.tenant": request.tenant,
         "a2a.message.id": request.message.message_id,
         "gen_ai.agent.name": card.name,
@@ -159,11 +167,13 @@ async def run_tasks_get_reference(a2a_url: str) -> None:
     )
 
     card = _agent_card(a2a_url)
+    interface = next(
+        interface for interface in card.supported_interfaces if interface.protocol_binding == TransportProtocol.JSONRPC
+    )
     host, port = mock_server_host_port(a2a_url)
     span_attrs = {
         "a2a.method.name": method,
-        "a2a.protocol.version": PROTOCOL_VERSION,
-        "a2a.agent_card.url": f"{a2a_url}/.well-known/agent-card.json",
+        "a2a.protocol.version": interface.protocol_version,
         "a2a.tenant": request.tenant,
         "gen_ai.agent.name": card.name,
         "gen_ai.agent.description": card.description,
