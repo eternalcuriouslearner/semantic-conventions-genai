@@ -53,11 +53,31 @@ scenarios:
           attributes:
             a2a.method.name: SendMessage
             a2a.tenant: billing-http
+            http.request.method: POST
           kind: server
           type: a2a.server
       - match:
           attributes:
             a2a.method.name: SendStreamingMessage
             a2a.tenant: billing-http
+            http.request.method: POST
+          kind: server
+          type: a2a.server
+      - match:
+          attributes:
+            a2a.method.name: GetTask
+            a2a.tenant: billing-http
+            http.request.method: POST
+            http.response.status_code: 200
+            error.type: "-32001"
+          kind: server
+          type: a2a.server
+      - match:
+          attributes:
+            a2a.method.name: GetTask
+            a2a.tenant: billing-http
+            http.request.method: GET
+            http.response.status_code: 404
+            error.type: "404"
           kind: server
           type: a2a.server

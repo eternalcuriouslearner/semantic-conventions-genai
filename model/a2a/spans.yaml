@@ -68,6 +68,24 @@ span_refinements:
 
       Instrumentation SHOULD update the span name to `{a2a.method.name}` once
       the A2A method is known.
+
+      Instrumentation SHOULD use the additional A2A error context to set the
+      span status to `ERROR`, as permitted by the
+      [HTTP span status conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.44.0/docs/http/http-spans.md#status),
+      and SHOULD set `error.type` according to the
+      [A2A error guidance](/docs/gen-ai/a2a.md#server), even when the HTTP response
+      indicates success.
+
+      Instrumentation coordinating A2A and HTTP telemetry SHOULD preserve the
+      A2A error classification when HTTP processing succeeds. If HTTP processing
+      also fails, its error classification SHOULD take precedence in `error.type`,
+      following the HTTP server conventions. In that case, the A2A error code
+      is not retained separately on the span.
+
+      This precedence normally applies to HTTP 5xx responses or transport
+      exceptions. Without additional context, HTTP server instrumentation leaves
+      span status unset for 4xx responses and does not set `error.type` based on
+      the status code, so the A2A error classification is preserved.
     stability: development
     name:
       note: |
@@ -85,6 +103,23 @@ span_refinements:
       When instrumentation can detect that the A2A request is handled within an
       instrumented gRPC server call, it SHOULD enrich the gRPC server span with
       A2A attributes instead of reporting a nested `a2a.server` span.
+
+      A2A protocol errors SHOULD set the span status to `ERROR`. When a specific
+      A2A error identifier is available from the exception or protocol error
+      details, instrumentation SHOULD use it for `error.type` instead of the
+      mapped gRPC status code. For example, `google.rpc.ErrorInfo.reason` with
+      domain `a2a-protocol.org` identifies the A2A error more precisely.
+
+      If no specific A2A error identifier is available, `error.type` SHOULD
+      follow the gRPC server conventions. Instrumentation SHOULD NOT infer an
+      A2A error identifier from the gRPC status code alone.
+
+      Instrumentation coordinating A2A and gRPC telemetry SHOULD preserve the
+      A2A error classification when gRPC processing succeeds or the gRPC status
+      represents the same A2A error. If an independent transport failure prevents
+      completion of the request, the transport error SHOULD take precedence in
+      `error.type`, following the gRPC server conventions. In that case, the
+      A2A error identifier is not retained separately on the span.
     stability: development
     name:
       note: |

@@ -20,15 +20,19 @@ attribute_groups:
           recommended: When the request message references task IDs.
       - ref: a2a.task.id
         requirement_level:
-          conditionally_required: When the A2A request or response is task-scoped.
+          conditionally_required: When the A2A request or response contains a single task ID.
+        note: Omit when the operation contains multiple distinct task IDs, for example in a `ListTasks` response.
       - ref: a2a.task.state
         requirement_level:
-          conditionally_required: When the A2A response or event contains task state.
+          conditionally_required: When the A2A response or event contains a single task state.
+        note: Omit when the operation contains multiple distinct task states, including across streaming events.
       - ref: gen_ai.conversation.id
         brief: Identifies the A2A [context identifier](https://a2a-protocol.org/latest/specification/#341-context-identifier-semantics).
         requirement_level:
-          conditionally_required: When the A2A request or response contains context id.
-        note: Set from the A2A `contextId` field.
+          conditionally_required: When the A2A request or response contains a single context ID.
+        note: >
+          Set from the A2A `contextId` field. Omit when the operation contains
+          multiple distinct context IDs, for example in a `ListTasks` response.
   - id: a2a.common.attributes
     visibility: internal
     attributes:

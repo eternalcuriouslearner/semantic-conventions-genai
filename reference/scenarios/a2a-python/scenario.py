@@ -11,10 +11,11 @@ from a2a import types as a2a_types
 from a2a.client import ClientConfig, create_client
 from a2a.server.routes import create_agent_card_routes
 from a2a.server.routes.jsonrpc_dispatcher import JsonRpcDispatcher
-from a2a.utils.constants import TransportProtocol
+from a2a.server.routes.rest_dispatcher import RestDispatcher
+from a2a.utils.constants import VERSION_HEADER, TransportProtocol
 from agent import agent_card, request_handler
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
-from opentelemetry.trace import SpanKind, get_current_span, use_span
+from opentelemetry.trace import SpanKind, StatusCode, get_current_span, use_span
 from reference_shared import (
     flush_and_shutdown,
     mock_server_host_port,
@@ -122,11 +123,16 @@ class ReferenceJsonRpcDispatcher(JsonRpcDispatcher):
 
         events = getattr(response, "body_iterator", None)
         if events is None:
-            result = json.loads(response.body).get("result") or {}
-            task = result.get("task") or result
-            span.set_attribute("a2a.task.id", task["id"])
-            span.set_attribute("a2a.task.state", task["status"]["state"])
-            span.set_attribute("gen_ai.conversation.id", task["contextId"])
+            payload = json.loads(response.body)
+            if error := payload.get("error"):
+                span.set_status(StatusCode.ERROR)
+                span.set_attribute("error.type", str(error["code"]))
+            else:
+                result = payload.get("result") or {}
+                task = result.get("task") or result
+                span.set_attribute("a2a.task.id", task["id"])
+                span.set_attribute("a2a.task.state", task["status"]["state"])
+                span.set_attribute("gen_ai.conversation.id", task["contextId"])
             if not self._enrich_transport_span:
                 span.end()
             return response
@@ -134,19 +140,72 @@ class ReferenceJsonRpcDispatcher(JsonRpcDispatcher):
         # A streaming call is not served until the client has drained the
         # stream, so the span stays open until the last event is yielded.
         async def traced_events():
+            task_ids: set[str] = set()
+            task_states: set[str] = set()
+            context_ids: set[str] = set()
             try:
                 async for event in events:
-                    update = (json.loads(event["data"]).get("result") or {}).get("statusUpdate")
+                    payload = json.loads(event["data"])
+                    if error := payload.get("error"):
+                        span.set_status(StatusCode.ERROR)
+                        span.set_attribute("error.type", str(error["code"]))
+                    result = payload.get("result") or {}
+                    if task := result.get("task"):
+                        task_ids.add(task["id"])
+                        task_states.add(task["status"]["state"])
+                        context_ids.add(task["contextId"])
+                    update = result.get("statusUpdate")
                     if update:
-                        span.set_attribute("a2a.task.id", update["taskId"])
-                        span.set_attribute("a2a.task.state", update["status"]["state"])
-                        span.set_attribute("gen_ai.conversation.id", update["contextId"])
+                        task_ids.add(update["taskId"])
+                        task_states.add(update["status"]["state"])
+                        context_ids.add(update["contextId"])
+                    if artifact := result.get("artifactUpdate"):
+                        task_ids.add(artifact["taskId"])
+                        context_ids.add(artifact["contextId"])
                     yield event
             finally:
+                if len(task_ids) == 1:
+                    span.set_attribute("a2a.task.id", next(iter(task_ids)))
+                if len(task_states) == 1:
+                    span.set_attribute("a2a.task.state", next(iter(task_states)))
+                if len(context_ids) == 1:
+                    span.set_attribute("gen_ai.conversation.id", next(iter(context_ids)))
                 if not self._enrich_transport_span:
                     span.end()
 
         response.body_iterator = traced_events()
+        return response
+
+
+class ReferenceRestDispatcher(RestDispatcher):
+    """Enrich the HTTP server span using the real SDK's REST task response."""
+
+    def __init__(self, request_handler, card: a2a_types.AgentCard) -> None:
+        super().__init__(request_handler=request_handler)
+        self._card = card
+
+    async def on_get_task(self, request: Request) -> Response:
+        interface = next(
+            i for i in self._card.supported_interfaces if i.protocol_binding == TransportProtocol.HTTP_JSON
+        )
+        span = get_current_span()
+        span.update_name("GetTask")
+        span.set_attributes(
+            {
+                "a2a.method.name": "GetTask",
+                "a2a.protocol.version": interface.protocol_version,
+                "a2a.task.id": request.path_params["id"],
+                "a2a.tenant": request.path_params["tenant"],
+                "gen_ai.agent.name": self._card.name,
+                "gen_ai.agent.description": self._card.description,
+                "gen_ai.agent.version": self._card.version,
+            }
+        )
+        response = await super().on_get_task(request)
+        if error := json.loads(response.body).get("error"):
+            # The mapped A2A error supplies context beyond the HTTP 4xx default.
+            span.set_status(StatusCode.ERROR)
+            span.set_attribute("error.type", str(error["code"]))
         return response
 
 
@@ -157,7 +216,8 @@ def _free_port() -> int:
 
 
 def _agent_app(card: a2a_types.AgentCard, *, enrich_transport_span: bool):
-    dispatcher = ReferenceJsonRpcDispatcher(request_handler(card), card, enrich_transport_span=enrich_transport_span)
+    handler = request_handler(card)
+    dispatcher = ReferenceJsonRpcDispatcher(handler, card, enrich_transport_span=enrich_transport_span)
     app = Starlette(
         routes=[
             Route(RPC_PATH, endpoint=dispatcher.handle_requests, methods=["POST"]),
@@ -166,6 +226,8 @@ def _agent_app(card: a2a_types.AgentCard, *, enrich_transport_span: bool):
     )
     if not enrich_transport_span:
         return app
+    rest_dispatcher = ReferenceRestDispatcher(handler, card)
+    app.routes.append(Route("/rest/{tenant}/tasks/{id}", endpoint=rest_dispatcher.on_get_task, methods=["GET"]))
     # A transport server span only exists when the ASGI app is instrumented;
     # this is the span the A2A attributes are stamped onto.
     return OpenTelemetryMiddleware(app, exclude_spans=["receive", "send"])
@@ -195,6 +257,14 @@ async def serve_agents():
     standalone_port, over_http_port = _free_port(), _free_port()
     standalone = agent_card(f"http://127.0.0.1:{standalone_port}{RPC_PATH}", tenant=TENANT)
     over_http = agent_card(f"http://127.0.0.1:{over_http_port}{RPC_PATH}", tenant=TENANT_OVER_HTTP)
+    over_http.supported_interfaces.append(
+        a2a_types.AgentInterface(
+            url=f"http://127.0.0.1:{over_http_port}/rest",
+            protocol_binding=TransportProtocol.HTTP_JSON,
+            protocol_version=_jsonrpc_interface(over_http).protocol_version,
+            tenant=TENANT_OVER_HTTP,
+        )
+    )
     async with (
         _serve(_agent_app(standalone, enrich_transport_span=False), standalone_port),
         _serve(_agent_app(over_http, enrich_transport_span=True), over_http_port),
@@ -259,9 +329,9 @@ async def run_message_stream_reference(card: a2a_types.AgentCard) -> None:
     )
 
     event_count = 0
-    task_id = None
-    context_id = None
-    task_state = None
+    task_ids: set[str] = set()
+    context_ids: set[str] = set()
+    task_states: set[str] = set()
     host, port = mock_server_host_port(interface.url)
     span_attrs = {
         "a2a.method.name": method,
@@ -280,17 +350,27 @@ async def run_message_stream_reference(card: a2a_types.AgentCard) -> None:
         async with await _create_a2a_client(card, streaming=True) as client:
             async for event in client.send_message(request):
                 event_count += 1
+                if event.HasField("task"):
+                    task_ids.add(event.task.id)
+                    context_ids.add(event.task.context_id)
+                    task_states.add(_task_state_value(event.task.status.state))
                 if event.HasField("status_update"):
-                    task_id = event.status_update.task_id
-                    context_id = event.status_update.context_id
-                    task_state = _task_state_value(event.status_update.status.state)
+                    task_ids.add(event.status_update.task_id)
+                    context_ids.add(event.status_update.context_id)
+                    task_states.add(_task_state_value(event.status_update.status.state))
+                if event.HasField("artifact_update"):
+                    task_ids.add(event.artifact_update.task_id)
+                    context_ids.add(event.artifact_update.context_id)
 
-        assert task_id is not None
-        assert task_state is not None
-        assert context_id is not None
-        span.set_attribute("a2a.task.id", task_id)
-        span.set_attribute("a2a.task.state", task_state)
-        span.set_attribute("gen_ai.conversation.id", context_id)
+        assert task_ids
+        assert task_states
+        assert context_ids
+        if len(task_ids) == 1:
+            span.set_attribute("a2a.task.id", next(iter(task_ids)))
+        if len(task_states) == 1:
+            span.set_attribute("a2a.task.state", next(iter(task_states)))
+        if len(context_ids) == 1:
+            span.set_attribute("gen_ai.conversation.id", next(iter(context_ids)))
     print(f"    -> {event_count} events")
 
 
@@ -357,6 +437,39 @@ async def run_scenarios() -> None:
         await run_message_stream_reference(standalone)
         await run_tasks_get_reference(standalone, task_id)
         await run_server_over_http_reference(over_http)
+        await run_server_error_reference(over_http)
+
+
+async def run_server_error_reference(card: a2a_types.AgentCard) -> None:
+    """The SDK returns a JSON-RPC error over HTTP 200 for an unknown task."""
+    interface = _jsonrpc_interface(card)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            interface.url,
+            headers={VERSION_HEADER: interface.protocol_version},
+            json={
+                "jsonrpc": "2.0",
+                "id": "missing-task-request",
+                "method": "GetTask",
+                "params": {"id": "missing-task", "tenant": interface.tenant},
+            },
+        )
+    assert response.status_code == 200
+    error = response.json()["error"]
+    assert error["code"] == -32001
+    print(f"  [server_error] HTTP {response.status_code}, A2A error {error['code']}")
+
+    rest_interface = next(i for i in card.supported_interfaces if i.protocol_binding == TransportProtocol.HTTP_JSON)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{rest_interface.url}/{rest_interface.tenant}/tasks/missing-task",
+            headers={VERSION_HEADER: rest_interface.protocol_version},
+        )
+    assert response.status_code == 404
+    error = response.json()["error"]
+    assert error["code"] == 404
+    assert error["status"] == "NOT_FOUND"
+    print(f"  [server_rest_error] HTTP {response.status_code}, A2A error {error['status']}")
 
 
 def main() -> None:
