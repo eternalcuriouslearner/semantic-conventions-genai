@@ -41,9 +41,17 @@ attribute_groups:
         requirement_level:
           conditionally_required: If and only if the operation fails.
         note: |
-          This attribute SHOULD be set to the string representation of the
-          JSON-RPC error code or protocol status code, if one is returned, or
-          the canonical name of the exception that occurred.
+          This attribute SHOULD be set to the protocol-provided A2A error reason
+          when available. Use `google.rpc.ErrorInfo.reason` with domain
+          `a2a-protocol.org`, for example `TASK_NOT_FOUND`, consistently across
+          JSON-RPC, HTTP+JSON, and gRPC bindings.
+
+          If no A2A error reason is available, use the string representation of
+          the JSON-RPC error code or the binding-specific protocol status code,
+          following the applicable binding's error conventions. If no protocol
+          error response is available, use the canonical name of the exception
+          that occurred. Instrumentation SHOULD NOT infer an A2A error reason
+          from an HTTP or gRPC status code alone.
 
           See the A2A specification for
           [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)

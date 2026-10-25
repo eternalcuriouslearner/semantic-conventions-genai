@@ -56,6 +56,21 @@ def _jsonrpc_interface(card: a2a_types.AgentCard) -> a2a_types.AgentInterface:
     return next(i for i in card.supported_interfaces if i.protocol_binding == TransportProtocol.JSONRPC)
 
 
+def _a2a_error_reason(details: object) -> str | None:
+    if not isinstance(details, list):
+        return None
+    for detail in details:
+        if (
+            isinstance(detail, dict)
+            and detail.get("@type") == "type.googleapis.com/google.rpc.ErrorInfo"
+            and detail.get("domain") == "a2a-protocol.org"
+            and isinstance(reason := detail.get("reason"), str)
+            and reason
+        ):
+            return reason
+    return None
+
+
 class ReferenceJsonRpcDispatcher(JsonRpcDispatcher):
     """The A2A server-side instrumentation point.
 
@@ -126,7 +141,7 @@ class ReferenceJsonRpcDispatcher(JsonRpcDispatcher):
             payload = json.loads(response.body)
             if error := payload.get("error"):
                 span.set_status(StatusCode.ERROR)
-                span.set_attribute("error.type", str(error["code"]))
+                span.set_attribute("error.type", _a2a_error_reason(error.get("data")) or str(error["code"]))
             else:
                 result = payload.get("result") or {}
                 task = result.get("task") or result
@@ -148,7 +163,7 @@ class ReferenceJsonRpcDispatcher(JsonRpcDispatcher):
                     payload = json.loads(event["data"])
                     if error := payload.get("error"):
                         span.set_status(StatusCode.ERROR)
-                        span.set_attribute("error.type", str(error["code"]))
+                        span.set_attribute("error.type", _a2a_error_reason(error.get("data")) or str(error["code"]))
                     result = payload.get("result") or {}
                     if task := result.get("task"):
                         task_ids.add(task["id"])
@@ -203,9 +218,9 @@ class ReferenceRestDispatcher(RestDispatcher):
         )
         response = await super().on_get_task(request)
         if error := json.loads(response.body).get("error"):
-            # The mapped A2A error supplies context beyond the HTTP 4xx default.
+            # The A2A reason identifies the error more precisely than the HTTP status.
             span.set_status(StatusCode.ERROR)
-            span.set_attribute("error.type", str(error["code"]))
+            span.set_attribute("error.type", _a2a_error_reason(error.get("details")) or str(error["code"]))
         return response
 
 

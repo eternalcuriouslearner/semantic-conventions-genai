@@ -69,7 +69,7 @@ scenarios:
             a2a.tenant: billing-http
             http.request.method: POST
             http.response.status_code: 200
-            error.type: "-32001"
+            error.type: TASK_NOT_FOUND
           kind: server
           type: a2a.server
       - match:
@@ -78,6 +78,6 @@ scenarios:
             a2a.tenant: billing-http
             http.request.method: GET
             http.response.status_code: 404
-            error.type: "404"
+            error.type: TASK_NOT_FOUND
           kind: server
           type: a2a.server

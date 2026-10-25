@@ -88,9 +88,17 @@ higher level GenAI agent operations.
 
 **[6] `a2a.task.state`:** Omit when the operation contains multiple distinct task states, including across streaming events.
 
-**[7] `error.type`:** This attribute SHOULD be set to the string representation of the
-JSON-RPC error code or protocol status code, if one is returned, or
-the canonical name of the exception that occurred.
+**[7] `error.type`:** This attribute SHOULD be set to the protocol-provided A2A error reason
+when available. Use `google.rpc.ErrorInfo.reason` with domain
+`a2a-protocol.org`, for example `TASK_NOT_FOUND`, consistently across
+JSON-RPC, HTTP+JSON, and gRPC bindings.
+
+If no A2A error reason is available, use the string representation of
+the JSON-RPC error code or the binding-specific protocol status code,
+following the applicable binding's error conventions. If no protocol
+error response is available, use the canonical name of the exception
+that occurred. Instrumentation SHOULD NOT infer an A2A error reason
+from an HTTP or gRPC status code alone.
 
 See the A2A specification for
 [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)
@@ -216,9 +224,17 @@ SHOULD enrich the transport server span instead - see A2A
 
 **[6] `a2a.task.state`:** Omit when the operation contains multiple distinct task states, including across streaming events.
 
-**[7] `error.type`:** This attribute SHOULD be set to the string representation of the
-JSON-RPC error code or protocol status code, if one is returned, or
-the canonical name of the exception that occurred.
+**[7] `error.type`:** This attribute SHOULD be set to the protocol-provided A2A error reason
+when available. Use `google.rpc.ErrorInfo.reason` with domain
+`a2a-protocol.org`, for example `TASK_NOT_FOUND`, consistently across
+JSON-RPC, HTTP+JSON, and gRPC bindings.
+
+If no A2A error reason is available, use the string representation of
+the JSON-RPC error code or the binding-specific protocol status code,
+following the applicable binding's error conventions. If no protocol
+error response is available, use the canonical name of the exception
+that occurred. Instrumentation SHOULD NOT infer an A2A error reason
+from an HTTP or gRPC status code alone.
 
 See the A2A specification for
 [error handling](https://a2a-protocol.org/latest/specification/#332-error-handling)
@@ -640,15 +656,9 @@ When instrumentation can detect that the A2A request is handled within an
 instrumented gRPC server call, it SHOULD enrich the gRPC server span with
 A2A attributes instead of reporting a nested `a2a.server` span.
 
-A2A protocol errors SHOULD set the span status to `ERROR`. When a specific
-A2A error identifier is available from the exception or protocol error
-details, instrumentation SHOULD use it for `error.type` instead of the
-mapped gRPC status code. For example, `google.rpc.ErrorInfo.reason` with
-domain `a2a-protocol.org` identifies the A2A error more precisely.
-
-If no specific A2A error identifier is available, `error.type` SHOULD
-follow the gRPC server conventions. Instrumentation SHOULD NOT infer an
-A2A error identifier from the gRPC status code alone.
+A2A protocol errors SHOULD set the span status to `ERROR` and SHOULD set
+`error.type` according to the [A2A error guidance](/docs/gen-ai/a2a.md#server),
+preferring an available A2A error reason over its mapped gRPC status code.
 
 Instrumentation coordinating A2A and gRPC telemetry SHOULD preserve the
 A2A error classification when gRPC processing succeeds or the gRPC status
@@ -873,15 +883,25 @@ the operational correlation between the operations.
 
 ### Server processing
 
-On the receiving side, the transport server span can be the parent of the A2A
-server span:
+On the receiving side, when instrumentation can detect the transport server
+span, it SHOULD enrich that span with A2A attributes. For HTTP, it SHOULD also
+rename the span to the A2A method name:
 
 ```text
-POST /message:send                 (HTTP server)
-└─ SendMessage                     (A2A server)
+SendMessage                        (HTTP server enriched with A2A attributes)
 ```
 
-For RPC bindings, the transport span is RPC server span
-`A2AService.SendMessage`.
+For gRPC, instrumentation SHOULD preserve the transport span name:
+
+```text
+A2AService.SendMessage             (gRPC server enriched with A2A attributes)
+```
+
+When instrumentation cannot detect a transport server span, it reports a
+standalone A2A server span:
+
+```text
+SendMessage                        (standalone A2A server)
+```
 
 [DocumentStatus]: https://opentelemetry.io/docs/specs/otel/document-status
