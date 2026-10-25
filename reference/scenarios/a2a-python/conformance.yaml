@@ -2,6 +2,9 @@ runner: genai-conformance
 instrumented_library: a2a-python
 instrumentation_library: reference
 
+weaver:
+  config: weaver.toml
+
 env:
   # The SDK traces every internal method as kind=SERVER; A2A semconv
   # instrumentation replaces that, so the two are not run together.

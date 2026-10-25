@@ -36,46 +36,6 @@
   },
   "events": {},
   "metrics": {},
-  "findings": [
-    {
-      "id": "missing_attribute",
-      "message": "Attribute 'http.request.method' does not exist in the registry.",
-      "context": {
-        "attribute_key": "http.request.method"
-      }
-    },
-    {
-      "id": "missing_attribute",
-      "message": "Attribute 'http.response.status_code' does not exist in the registry.",
-      "context": {
-        "attribute_key": "http.response.status_code"
-      }
-    },
-    {
-      "id": "missing_attribute",
-      "message": "Attribute 'url.path' does not exist in the registry.",
-      "context": {
-        "attribute_key": "url.path"
-      }
-    },
-    {
-      "id": "missing_attribute",
-      "message": "Attribute 'url.scheme' does not exist in the registry.",
-      "context": {
-        "attribute_key": "url.scheme"
-      }
-    },
-    {
-      "id": "missing_attribute",
-      "message": "Attribute 'user_agent.original' does not exist in the registry.",
-      "context": {
-        "attribute_key": "user_agent.original"
-      }
-    },
-    {
-      "id": "missing_metric",
-      "message": "Metric does not exist in the registry."
-    }
-  ],
+  "findings": [],
   "entities": {}
 }
